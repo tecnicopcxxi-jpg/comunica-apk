@@ -1,0 +1,17 @@
+{
+  "name": "Comunica+ · Plataforma AAC",
+  "short_name": "Comunica+",
+  "description": "Plataforma de comunicación aumentativa y alternativa (AAC) para ayudar a niños a aprender a comunicarse y hablar.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F3FB",
+  "theme_color": "#6E5DE0",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
