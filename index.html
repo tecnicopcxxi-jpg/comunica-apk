@@ -725,7 +725,9 @@ function emojiToSvgUrl(emoji){
   try{
     if(window.twemoji && twemoji.convert && twemoji.convert.toCodePoint){
       const code = twemoji.convert.toCodePoint(emoji);
-      return 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/'+code+'.svg';
+      // Se usa el mismo formato PNG que el resto de la app (72x72), que es el que
+      // realmente está disponible en el CDN. La carpeta "svg" no siempre existe ahí.
+      return 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/'+code+'.png';
     }
   }catch(e){}
   return null;
