@@ -51,7 +51,17 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{ background:var(--bg); color:var(--ink); font-family:'Atkinson Hyperlegible', sans-serif; min-height:100vh; }
+  body{ background:var(--bg); color:var(--ink); font-family:'Atkinson Hyperlegible', sans-serif; min-height:100vh; position:relative; overflow-x:hidden;}
+  body::before{ content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,180,60,.28), transparent 42%),
+      radial-gradient(circle at 88% 12%, rgba(110,93,224,.26), transparent 42%),
+      radial-gradient(circle at 50% 95%, rgba(75,187,166,.22), transparent 46%),
+      radial-gradient(circle at 90% 80%, rgba(233,111,160,.18), transparent 40%);
+    filter:blur(50px);
+    transition:opacity .3s ease;
+  }
+  body[data-style="adolescente"]::before{ opacity:.4; filter:blur(70px);}
   h1,h2,h3,.display{ font-family:'Baloo 2', sans-serif; margin:0; }
   button{font-family:inherit; cursor:pointer;}
   #app{max-width:1180px; margin:0 auto; padding:18px 18px 48px;}
@@ -157,6 +167,7 @@
     align-items:center; justify-content:center; gap:8px; box-shadow:var(--shadow-1);
     transition:transform .08s ease; min-height:110px;}
   .picto-btn:active{transform:scale(.94);}
+  .picto-btn:hover{transform:translateY(-3px) scale(1.02);}
   .picto-btn .emoji{font-size:40px; line-height:1;}
   .picto-btn .label{font-family:'Baloo 2'; font-weight:700; font-size:15px; text-align:center;}
   .picto-cell{position:relative;}
@@ -256,6 +267,23 @@
   .empty-state{text-align:center; padding:50px 20px; color:var(--ink-soft);}
   .helper-note{ background:#FFF6E6; border:1px solid #F2D9A0; border-radius:14px; padding:12px 14px; font-size:13.5px; color:#6B5424; margin-top:16px;}
   footer.note{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:36px;}
+
+  /* ---------- Mascota ---------- */
+  .mascot-widget{ position:fixed; right:16px; bottom:16px; display:flex; align-items:flex-end; gap:10px;
+    z-index:40; pointer-events:none; max-width:260px;}
+  .mascot-bubble{ background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:10px 14px;
+    font-family:'Baloo 2'; font-weight:700; font-size:13px; box-shadow:0 8px 20px -8px rgba(43,38,64,.35);
+    max-width:170px; text-align:center;}
+  .mascot-avatar{ width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:32px; box-shadow:0 8px 20px -8px rgba(43,38,64,.4); flex:0 0 auto;
+    animation:mascot-bob 2.4s ease-in-out infinite alternate;}
+  @keyframes mascot-bob{ from{transform:translateY(0) rotate(-4deg);} to{transform:translateY(-9px) rotate(4deg);} }
+  @media (max-width:640px){ .mascot-widget{right:10px; bottom:10px;} .mascot-bubble{display:none;} .mascot-avatar{width:50px;height:50px;font-size:26px;} }
+
+  /* ---------- Confeti de festejo ---------- */
+  .confetti-row{display:flex; gap:6px; justify-content:center; margin-top:6px;}
+  .confetti-piece{display:inline-block; font-size:20px; animation:confetti-pop .6s ease forwards; opacity:0;}
+  @keyframes confetti-pop{0%{transform:translateY(6px) scale(.3) rotate(0deg); opacity:0;}55%{opacity:1;}100%{transform:translateY(-14px) scale(1) rotate(12deg); opacity:1;}}
 
   /* ---------- Paginación del tablero ---------- */
   .board-pager{display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px;}
@@ -471,9 +499,34 @@ const THEMES = {
 
 const AVATAR_CHOICES = ['🙂','👦','👧','🧒','😊','🐻','🐰','🦁','🐼','🦊'];
 
+// ---------- Mascota: compañero animado, original (no personajes con derechos de autor) ----------
+const MASCOTS = {
+  fox:     { name:'Rayo',   emoji:'🦊', color:'#F2913C' },
+  unicorn: { name:'Estela', emoji:'🦄', color:'#B57BDC' },
+  koala:   { name:'Bongo',  emoji:'🐨', color:'#8AA83C' },
+  robot:   { name:'Chispa', emoji:'🤖', color:'#4DA6E8' },
+  lion:    { name:'Nino',   emoji:'🦁', color:'#F4CB3A' },
+  octopus: { name:'Bubu',   emoji:'🐙', color:'#E96FA0' },
+  dragon:  { name:'Kiro',   emoji:'🐲', color:'#2FB6A6' },
+};
+const MASCOT_IDLE = ['¡Vamos a comunicarnos juntos!', '¡Elegí una palabra!', 'Estoy acá para ayudarte 💜', '¡Sos genial!', '¿Jugamos un rato?'];
+const MASCOT_GOOD = ['¡Genial! 🎉', '¡Lo lograste! 🙌', '¡Excelente trabajo!', '¡Así se hace!', '¡Buenísimo!'];
+const MASCOT_BAD  = ['¡Casi! Probemos de nuevo 💪', '¡Vos podés! Intentemos otra vez', 'No pasa nada, ¡seguimos!'];
+function renderMascot(p, mood){
+  if(!p || p.visualStyle==='adolescente') return null;
+  const m = MASCOTS[p.mascot] || MASCOTS.fox;
+  const pool = mood==='good' ? MASCOT_GOOD : mood==='bad' ? MASCOT_BAD : MASCOT_IDLE;
+  const phrase = pool[Math.floor(Math.random()*pool.length)];
+  return el('div',{class:'mascot-widget'},[
+    el('div',{class:'mascot-bubble'}, phrase),
+    el('div',{class:'mascot-avatar', style:`background:${m.color};`}, m.emoji)
+  ]);
+}
+
 function defaultProfile(id){
   return {
     id, name:'', age:5, avatar:'🙂', theme:'superheroes', gridSize:9,
+    mascot:'fox', visualStyle:'infantil',
     categoriesEnabled:{
       personas:true, acciones:true, emociones:true, cualidades:true, necesidades:true,
       dolor:true, comidas:true,
@@ -517,7 +570,8 @@ let state = {
   voiceIndex:{},
   practice:{ target:null, options:[], locked:false, feedback:null, listening:false, recording:false, recordingUrl:null, mediaRecorder:null },
   sequence:{ model:[], pool:[], built:[], done:false, mistakes:0 },
-  puzzle:{ word:null, size:2, slots:[], tray:[], selected:null, wrongSlot:null, done:false }
+  puzzle:{ word:null, size:2, slots:[], tray:[], selected:null, wrongSlot:null, done:false },
+  mascotMood:'idle'
 };
 
 const $ = (sel, root=document) => root.querySelector(sel);
@@ -750,6 +804,14 @@ async function render(){
   else if(state.view==='practice-balloons') app.appendChild(await renderBalloonsPractice());
   else if(state.view==='report') app.appendChild(await renderReportView());
   app.appendChild(el('footer',{class:'note no-print'}, 'Comunica+ · Tablero de comunicación pictográfica para acompañar el aprendizaje del lenguaje.'));
+  if(state.currentId && state.profilesCache[state.currentId] && state.view!=='report'){
+    const p = state.profilesCache[state.currentId];
+    document.body.dataset.style = p.visualStyle==='adolescente' ? 'adolescente' : 'infantil';
+    const mascotEl = renderMascot(p, state.mascotMood);
+    if(mascotEl) app.appendChild(mascotEl);
+  }else{
+    document.body.dataset.style = 'infantil';
+  }
   applyEmojiIcons(app);
 }
 function applyEmojiIcons(root){
@@ -763,9 +825,9 @@ function applyEmojiIcons(root){
 function renderTopbar(){
   const currentName = state.currentId && state.profilesCache[state.currentId] ? state.profilesCache[state.currentId].name : null;
   const actions = [];
-  if(state.view!=='profiles') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='profiles'; render();}}, '🏠 Perfiles'));
-  if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid', onclick:()=>{state.view='board'; render();}}, '🗣️ Ir al tablero'));
-  if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='practice-menu'; render();}}, '🎓 Aprender a hablar'));
+  if(state.view!=='profiles') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='profiles'; state.mascotMood='idle'; render();}}, '🏠 Perfiles'));
+  if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid', onclick:()=>{state.view='board'; state.mascotMood='idle'; render();}}, '🗣️ Ir al tablero'));
+  if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='practice-menu'; state.mascotMood='idle'; render();}}, '🎓 Aprender a hablar'));
   if(state.currentId && state.view!=='report') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='report'; render();}}, '🖨️ Reporte'));
   if(state.currentId && state.view!=='config') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.editingId=state.currentId; state.view='config'; render();}}, '⚙️ Configurar'));
   return el('div',{class:'topbar no-print'},[
@@ -847,6 +909,22 @@ async function renderConfigView(){
   const avatarOpts = el('div',{class:'avatar-options'});
   AVATAR_CHOICES.forEach(a=> avatarOpts.appendChild(el('button',{class:'chip-option'+(p.avatar===a?' selected':''), onclick:()=>{p.avatar=a; render();}}, a)));
   avatarField.appendChild(avatarOpts); left.appendChild(avatarField);
+
+  const styleField = el('div',{class:'field'},[el('label',{},'Estilo visual')]);
+  const styleOpts = el('div',{class:'theme-options'});
+  [['infantil','🎨 Infantil (colorido, con mascota)'], ['adolescente','🌓 Adolescente (más sobrio, sin mascota)']].forEach(([key,label])=>{
+    styleOpts.appendChild(el('button',{class:'chip-option'+(p.visualStyle===key?' selected':''), onclick:()=>{p.visualStyle=key; render();}}, label));
+  });
+  styleField.appendChild(styleOpts); left.appendChild(styleField);
+
+  if(p.visualStyle!=='adolescente'){
+    const mascotField = el('div',{class:'field'},[el('label',{},'Mascota')]);
+    const mascotOpts = el('div',{class:'theme-options'});
+    Object.entries(MASCOTS).forEach(([key,m])=>{
+      mascotOpts.appendChild(el('button',{class:'chip-option'+(p.mascot===key?' selected':''), onclick:()=>{p.mascot=key; render();}}, m.emoji+' '+m.name));
+    });
+    mascotField.appendChild(mascotOpts); left.appendChild(mascotField);
+  }
 
   const themeField = el('div',{class:'field'},[el('label',{},'Temática de interés (vocabulario e imágenes)')]);
   const themeOpts = el('div',{class:'theme-options'});
@@ -1279,14 +1357,15 @@ async function startSimplePractice(mode){
   const distractors = pool.filter(w=>w.label!==target.label).sort(()=>Math.random()-0.5).slice(0, Math.max(1,nOptions-1));
   const options = [target, ...distractors].sort(()=>Math.random()-0.5);
   state.practice = { target, options, locked:false, feedback:null };
+  state.mascotMood = 'idle';
   state.view = mode; render();
   if(mode==='practice-listen') setTimeout(()=>speakItem(p, target), 200);
 }
 async function resolvePracticeChoice(p, target, isTarget, nextMode){
   state.practice.locked = true;
   p.progress.practiceAttempts += 1;
-  if(isTarget){ state.practice.feedback='good'; p.progress.practiceCorrect += 1; speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch); }
-  else{ state.practice.feedback={type:'bad', correct:target}; speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch); }
+  if(isTarget){ state.practice.feedback='good'; state.mascotMood='good'; p.progress.practiceCorrect += 1; speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch); }
+  else{ state.practice.feedback={type:'bad', correct:target}; state.mascotMood='bad'; speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch); }
   await saveProfile(p); render();
   setTimeout(()=>startSimplePractice(nextMode), 2200);
 }
@@ -1484,6 +1563,7 @@ async function startSequencePractice(){
   const shuffled = [...model].sort(()=>Math.random()-0.5);
   state.sequence = { model, pool:shuffled, built:[], done:false, mistakes:0 };
   state.practice.feedback = null;
+  state.mascotMood = 'idle';
   state.view = 'practice-sequence'; render();
   setTimeout(()=>speakSentence(p, model), 250);
 }
@@ -1515,6 +1595,7 @@ async function renderSequencePractice(){
           built.push(w); speakItem(p, w); state.practice.feedback = null;
           if(built.length===model.length){
             state.sequence.done = true;
+            state.mascotMood = 'good';
             p.progress.sequencesCompleted = (p.progress.sequencesCompleted||0)+1;
             p.progress.practiceAttempts += 1; p.progress.practiceCorrect += 1;
             await saveProfile(p);
@@ -1522,6 +1603,7 @@ async function renderSequencePractice(){
           }
         }else{
           state.practice.feedback = {type:'bad-hint', wrongWord:w, hintWord:expected};
+          state.mascotMood = 'bad';
           state.sequence.mistakes = (state.sequence.mistakes||0)+1;
           speakItem(p, expected);
         }
@@ -1555,6 +1637,7 @@ async function startPuzzlePractice(resetSession){
   const tray = [...pieces].sort(()=>Math.random()-0.5);
   state.puzzle = { word, size, svgUrl, tray, slots: new Array(size*size).fill(null), selectedPieceId:null, wrongSlotIndex:null, done:false, sessionCount, autoTimeoutId:null };
   state.practice.feedback = null;
+  state.mascotMood = 'idle';
   state.view = 'practice-puzzle';
   render();
 }
@@ -1658,6 +1741,7 @@ async function startBalloonsPractice(resetSession){
   const options = [target, ...distractors].sort(()=>Math.random()-0.5);
   state.practice = { target, options, locked:false, feedback:null };
   state.balloonGame = { sessionCount, autoTimeoutId:null };
+  state.mascotMood = 'idle';
   state.view = 'practice-balloons';
   render();
   setTimeout(()=>speakItem(p, target), 200);
@@ -1666,11 +1750,11 @@ async function resolveBalloon(p, target, isTarget){
   state.practice.locked = true;
   p.progress.practiceAttempts += 1;
   if(isTarget){
-    state.practice.feedback='good'; p.progress.practiceCorrect += 1;
+    state.practice.feedback='good'; state.mascotMood='good'; p.progress.practiceCorrect += 1;
     state.balloonGame.sessionCount = (state.balloonGame.sessionCount||0)+1;
     speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch);
   }else{
-    state.practice.feedback = {type:'bad', correct:target};
+    state.practice.feedback = {type:'bad', correct:target}; state.mascotMood='bad';
     speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch);
   }
   await saveProfile(p); render();
