@@ -1,4 +1,4 @@
-const CACHE_NAME = 'comunica-plus-v1';
+const CACHE_NAME = 'comunica-plus-v2';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,7 +17,9 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Cache-first para los archivos de la app; red directa (sin cachear) para todo lo externo (fuentes, iconos de Twemoji).
+// Estrategia: "red primero" para la app (index.html y este mismo origen), así las
+// actualizaciones que subís a GitHub llegan solas la próxima vez que se abra con
+// internet. Si no hay conexión, sirve la última copia guardada (modo offline).
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -25,13 +27,10 @@ self.addEventListener('fetch', (event) => {
   if (!isSameOrigin) return; // deja pasar CDNs (fuentes, twemoji) directo a la red
 
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((resp) => {
-        const clone = resp.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-        return resp;
-      }).catch(() => cached);
-    })
+    fetch(req).then((resp) => {
+      const clone = resp.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+      return resp;
+    }).catch(() => caches.match(req))
   );
 });

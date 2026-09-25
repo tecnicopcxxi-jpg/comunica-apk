@@ -270,15 +270,79 @@
 
   /* ---------- Mascota ---------- */
   .mascot-widget{ position:fixed; right:16px; bottom:16px; display:flex; align-items:flex-end; gap:10px;
-    z-index:40; pointer-events:none; max-width:260px;}
-  .mascot-bubble{ background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:10px 14px;
-    font-family:'Baloo 2'; font-weight:700; font-size:13px; box-shadow:0 8px 20px -8px rgba(43,38,64,.35);
-    max-width:170px; text-align:center;}
-  .mascot-avatar{ width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:32px; box-shadow:0 8px 20px -8px rgba(43,38,64,.4); flex:0 0 auto;
-    animation:mascot-bob 2.4s ease-in-out infinite alternate;}
-  @keyframes mascot-bob{ from{transform:translateY(0) rotate(-4deg);} to{transform:translateY(-9px) rotate(4deg);} }
-  @media (max-width:640px){ .mascot-widget{right:10px; bottom:10px;} .mascot-bubble{display:none;} .mascot-avatar{width:50px;height:50px;font-size:26px;} }
+    z-index:40; max-width:280px; flex-direction:row-reverse;}
+  .mascot-bubble{ background:var(--surface); border:2px solid var(--line); border-radius:18px; padding:11px 15px;
+    font-family:'Baloo 2'; font-weight:700; font-size:14px; box-shadow:0 8px 20px -8px rgba(43,38,64,.35);
+    max-width:180px; text-align:center; pointer-events:none;}
+  .mascot-avatar{ width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:54px; box-shadow:0 10px 26px -8px rgba(43,38,64,.45), 0 0 0 5px rgba(255,255,255,.55); flex:0 0 auto;
+    border:none; cursor:pointer; animation:mascot-bob 1.6s cubic-bezier(.34,1.56,.64,1) infinite alternate; transition:transform .1s ease;}
+  .mascot-avatar:active{ transform:scale(.92); }
+  .mascot-avatar.mascot-poke{ animation:mascot-poke .7s ease; }
+  .mascot-avatar.mascot-flourish{ animation:mascot-flourish .9s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes mascot-bob{ 0%{transform:translateY(0) rotate(-6deg) scale(1);} 100%{transform:translateY(-16px) rotate(6deg) scale(1.06);} }
+  @keyframes mascot-poke{ 0%{transform:scale(1) rotate(0);} 25%{transform:scale(1.35) rotate(-14deg);} 50%{transform:scale(.88) rotate(10deg);} 75%{transform:scale(1.15) rotate(-6deg);} 100%{transform:scale(1) rotate(0);} }
+  @keyframes mascot-flourish{ 0%{transform:translateY(0) rotate(0) scale(1);} 20%{transform:translateY(-22px) rotate(-12deg) scale(1.1);} 40%{transform:translateY(0) rotate(10deg) scale(.95);} 60%{transform:translateY(-10px) rotate(-8deg) scale(1.05);} 80%{transform:translateY(0) rotate(6deg) scale(1);} 100%{transform:translateY(0) rotate(0) scale(1);} }
+  .mascot-reaction-pop{ position:absolute; right:6px; top:-8px; font-size:30px; pointer-events:none;
+    animation:mascot-reaction-rise .9s ease forwards;}
+  @keyframes mascot-reaction-rise{ 0%{transform:translateY(0) scale(.6); opacity:0;} 25%{opacity:1; transform:translateY(-10px) scale(1.15);} 100%{transform:translateY(-46px) scale(1); opacity:0;} }
+
+  /* ---------- Chispitas al tocar (efecto multisensorial liviano) ---------- */
+  .spark-layer{ position:fixed; width:0; height:0; z-index:60; pointer-events:none;}
+  .spark-piece{ position:absolute; font-size:16px; left:0; top:0;
+    animation:spark-fly .55s ease-out forwards;}
+  @keyframes spark-fly{ 0%{transform:translate(0,0) scale(.6); opacity:1;}
+    100%{transform:rotate(var(--angle)) translate(34px,-34px) scale(1); opacity:0;} }
+
+  /* ---------- Aviso de logro desbloqueado ---------- */
+  .achievement-toast{ position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:70;
+    background:linear-gradient(135deg,#7C3AED,#EC4899); color:#fff; padding:14px 22px; border-radius:18px;
+    font-family:'Baloo 2'; font-weight:800; font-size:15px; box-shadow:0 12px 28px -10px rgba(0,0,0,.4);
+    display:flex; align-items:center; gap:10px; animation:toast-in .4s ease;}
+  .achievement-toast .emoji{font-size:26px;}
+  @keyframes toast-in{ from{transform:translateX(-50%) translateY(-30px); opacity:0;} to{transform:translateX(-50%) translateY(0); opacity:1;} }
+
+  /* ---------- Logros ---------- */
+  .achv-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin-top:16px;}
+  .achv-card{ border:2px solid var(--line); border-radius:16px; padding:16px; text-align:center; background:var(--surface);}
+  .achv-card.locked{ opacity:.45; filter:grayscale(1);}
+  .achv-card .emoji{font-size:36px; display:block; margin-bottom:8px;}
+  .achv-card .title{font-family:'Baloo 2'; font-weight:700; font-size:13.5px;}
+
+  /* ---------- Predicción de palabras ---------- */
+  .prediction-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:2px 0 14px;}
+  .prediction-label{font-size:12.5px; color:var(--ink-soft); font-weight:700;}
+  .prediction-chip{ border:2px dashed var(--accent); background:#EDE9FC; color:var(--accent); border-radius:999px;
+    padding:7px 13px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:6px;}
+
+  /* ---------- Comunicación rápida (emergencias) ---------- */
+  .quick-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px;}
+  .quick-btn{ border:none; border-radius:20px; padding:22px 10px; background:#E0645C; color:#fff;
+    display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:0 8px 20px -8px rgba(224,100,92,.6);}
+  .quick-btn .emoji{font-size:44px;}
+  .quick-btn .label{font-family:'Baloo 2'; font-weight:800; font-size:15px; text-align:center;}
+
+  /* ---------- Historias interactivas ---------- */
+  .story-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:16px;}
+  .story-card{ background:var(--surface); border:2px solid var(--line); border-radius:var(--radius-lg); padding:20px; text-align:left;}
+  .story-card .s-emoji{font-size:40px; display:block; margin-bottom:8px;}
+  .story-card h3{font-size:17px; margin-bottom:6px;}
+  .story-card p{font-size:13.5px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4;}
+  .story-scene{ background:var(--surface); border:2px solid var(--line); border-radius:var(--radius-lg); padding:26px 20px; text-align:center; margin-bottom:18px;}
+  .story-scene .s-emoji{font-size:60px; display:block; margin-bottom:10px;}
+  .story-scene .s-text{font-family:'Baloo 2'; font-weight:700; font-size:19px; margin-bottom:4px;}
+  .story-sentence{ background:var(--surface-2); border:2px dashed var(--line); border-radius:16px; padding:12px 16px;
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center; min-height:56px; align-items:center; margin-bottom:18px;}
+  .story-options{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; max-width:640px; margin:0 auto;}
+  .story-option{ border:3px solid var(--line); background:var(--surface); border-radius:var(--radius-lg); padding:18px 10px;
+    display:flex; flex-direction:column; align-items:center; gap:8px; min-height:110px;}
+  .story-option .emoji{font-size:38px;}
+  .story-option .label{font-family:'Baloo 2'; font-weight:700; font-size:14px; text-align:center;}
+  @media (max-width:640px){
+    .mascot-widget{right:10px; bottom:10px; max-width:220px;}
+    .mascot-bubble{font-size:12.5px; padding:8px 12px; max-width:140px;}
+    .mascot-avatar{width:80px;height:80px;font-size:44px;}
+  }
 
   /* ---------- Confeti de festejo ---------- */
   .confetti-row{display:flex; gap:6px; justify-content:center; margin-top:6px;}
@@ -512,16 +576,137 @@ const MASCOTS = {
 const MASCOT_IDLE = ['¡Vamos a comunicarnos juntos!', '¡Elegí una palabra!', 'Estoy acá para ayudarte 💜', '¡Sos genial!', '¿Jugamos un rato?'];
 const MASCOT_GOOD = ['¡Genial! 🎉', '¡Lo lograste! 🙌', '¡Excelente trabajo!', '¡Así se hace!', '¡Buenísimo!'];
 const MASCOT_BAD  = ['¡Casi! Probemos de nuevo 💪', '¡Vos podés! Intentemos otra vez', 'No pasa nada, ¡seguimos!'];
+const MASCOT_STREAK = '¡Ya estás aprendiendo mucho! 🌟';
+const MASCOT_NUDGE = '¿Querés probar otro juego? 🎮';
+
+// Reacciones de la mascota al tocar ciertas palabras en el tablero (engagement contextual).
+const REACTION_WORDS = {
+  'agua':'💧', 'beber':'🥤', 'comer':'🍎', 'comida':'🍎', 'feliz':'💃',
+  'dormir':'😴', 'jugar':'🎲', 'triste':'😢', 'hola':'👋', 'gracias':'💜'
+};
+
+// Logros desbloqueables según el progreso acumulado (sistema de recompensas).
+const ACHIEVEMENTS = [
+  { id:'palabras_50', title:'Dije 50 palabras', emoji:'🗣️', check:pr=>pr.wordsSpoken>=50 },
+  { id:'palabras_100', title:'Dije 100 palabras', emoji:'🌟', check:pr=>pr.wordsSpoken>=100 },
+  { id:'frases_10', title:'Construí 10 frases', emoji:'📝', check:pr=>pr.sentencesBuilt>=10 },
+  { id:'frases_20', title:'Construí 20 frases', emoji:'🏆', check:pr=>pr.sentencesBuilt>=20 },
+  { id:'rompecabezas_10', title:'Completé 10 rompecabezas', emoji:'🖼️', check:pr=>pr.puzzlesCompleted>=10 },
+  { id:'globos_20', title:'Reventé 20 globos', emoji:'🎈', check:pr=>(pr.balloonsPopped||0)>=20 },
+  { id:'secuencias_10', title:'Armé 10 frases en orden', emoji:'🧩', check:pr=>pr.sequencesCompleted>=10 },
+  { id:'racha_5', title:'5 aciertos seguidos', emoji:'🔥', check:pr=>(pr.bestStreak||0)>=5 },
+];
+
+// Predicción de próximas palabras según la última tocada (tipo teclado predictivo AAC).
+const PREDICTIONS = {
+  'yo':['quiero','necesito','estoy'],
+  'tengo':['hambre','sueño','frío','calor'],
+  'quiero':['jugar','comer','beber','dormir'],
+  'estoy':['feliz','triste','cansado','con miedo'],
+};
+
+// Palabras para la pantalla de comunicación rápida (emergencias / necesidades urgentes).
+const QUICK_WORDS = [
+  {label:'ayudar', emoji:'🆘'}, {label:'me duele la panza', emoji:'🤢'}, {label:'me duele la cabeza', emoji:'🤕'},
+  {label:'baño', emoji:'🚽'}, {label:'agua', emoji:'💧'}, {label:'comida', emoji:'🍎'},
+  {label:'con miedo', emoji:'😨'}, {label:'cansado', emoji:'🥱'}, {label:'tengo frío', emoji:'🥶'}, {label:'tengo calor', emoji:'🥵'}
+];
 function renderMascot(p, mood){
   if(!p || p.visualStyle==='adolescente') return null;
   const m = MASCOTS[p.mascot] || MASCOTS.fox;
   const pool = mood==='good' ? MASCOT_GOOD : mood==='bad' ? MASCOT_BAD : MASCOT_IDLE;
   const phrase = pool[Math.floor(Math.random()*pool.length)];
   return el('div',{class:'mascot-widget'},[
-    el('div',{class:'mascot-bubble'}, phrase),
-    el('div',{class:'mascot-avatar', style:`background:${m.color};`}, m.emoji)
+    el('button',{class:'mascot-avatar'+(state.mascotPoke?' mascot-poke':''), style:`background:${m.color};`, title:m.name, onclick:()=>pokeMascot(p)}, m.emoji),
+    el('div',{class:'mascot-bubble'}, phrase)
   ]);
 }
+// Al tocar la mascota: reacciona con una animación y dice algo con voz, para que se sienta interactiva.
+function pokeMascot(p){
+  markInteraction();
+  state.mascotPoke = true;
+  render();
+  const pool = state.mascotMood==='good' ? MASCOT_GOOD : state.mascotMood==='bad' ? MASCOT_BAD : MASCOT_IDLE;
+  const phrase = pool[Math.floor(Math.random()*pool.length)];
+  speak(phrase, p.voiceRate, p.voicePitch);
+  setTimeout(()=>{ state.mascotPoke=false; render(); }, 700);
+}
+// Reacción visual de la mascota a una palabra puntual del tablero (una burbuja con el emoji que aparece y sube).
+function mascotWordReaction(label){
+  const emoji = REACTION_WORDS[normalizeWord(label)];
+  const widget = document.querySelector('.mascot-widget');
+  if(!emoji || !widget) return;
+  const span = document.createElement('span');
+  span.textContent = emoji;
+  span.className = 'mascot-reaction-pop';
+  widget.appendChild(span);
+  setTimeout(()=>span.remove(), 900);
+}
+// Vibración corta en aciertos/errores (si el dispositivo y el perfil lo permiten).
+function hapticFeedback(p, type){
+  if(!p || p.sensoryEffects===false) return;
+  try{
+    if(!('vibrate' in navigator)) return;
+    navigator.vibrate(type==='good' ? 50 : [40,60,40]);
+  }catch(e){}
+}
+// Chispitas breves en el punto tocado (efecto multisensorial liviano, no invasivo).
+function sparkAt(targetEl, p){
+  if(!p || p.sensoryEffects===false || !targetEl) return;
+  try{
+    const rect = targetEl.getBoundingClientRect();
+    const layer = document.createElement('div');
+    layer.className = 'spark-layer';
+    layer.style.left = (rect.left+rect.width/2)+'px';
+    layer.style.top = (rect.top+rect.height/2)+'px';
+    const pieces = ['✨','⭐'];
+    for(let i=0;i<4;i++){
+      const s = document.createElement('span');
+      s.textContent = pieces[i%pieces.length];
+      s.className = 'spark-piece';
+      s.style.setProperty('--angle', (i*90+Math.random()*40)+'deg');
+      layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+    setTimeout(()=>layer.remove(), 650);
+  }catch(e){}
+}
+// Busca una palabra por su texto en todo el vocabulario disponible del perfil (para la fila de predicción).
+function findWordByLabel(p, label){
+  const norm = normalizeWord(label);
+  for(const c of CORE_CATEGORIES){ const hit = c.words.find(w=>normalizeWord(w.label)===norm); if(hit) return hit; }
+  const theme = THEMES[p.theme];
+  if(theme){ const hit = theme.words.find(w=>normalizeWord(w.label)===norm); if(hit) return hit; }
+  if(p.customWords){ const hit = p.customWords.find(w=>normalizeWord(w.label)===norm); if(hit) return hit; }
+  return { label, emoji:'💬' };
+}
+// Racha de aciertos consecutivos en los juegos de práctica (para logros y frase especial de la mascota).
+function registerStreak(p, correct){
+  state.correctStreak = correct ? (state.correctStreak||0)+1 : 0;
+  if(correct && state.correctStreak > (p.progress.bestStreak||0)) p.progress.bestStreak = state.correctStreak;
+  if(correct && state.correctStreak===5){
+    setTimeout(()=>speak(MASCOT_STREAK, p.voiceRate, p.voicePitch), 900);
+  }
+}
+// Revisa logros nuevos, guarda el perfil, y si hay alguno nuevo lo celebra (mascota + aviso).
+async function afterProgressUpdate(p){
+  const before = new Set(p.unlockedAchievements||[]);
+  const newly = ACHIEVEMENTS.filter(a=>!before.has(a.id) && a.check(p.progress));
+  if(newly.length){
+    p.unlockedAchievements = [...before, ...newly.map(a=>a.id)];
+  }
+  await saveProfile(p);
+  if(newly.length){
+    state.newAchievement = newly[0];
+    const avatar = document.querySelector('.mascot-avatar');
+    if(avatar){ avatar.classList.add('mascot-flourish'); setTimeout(()=>avatar.classList.remove('mascot-flourish'), 900); }
+    speak('¡Nuevo logro! '+newly[0].title, p.voiceRate, p.voicePitch);
+    render();
+    setTimeout(()=>{ state.newAchievement=null; render(); }, 3200);
+  }
+}
+let lastInteractionAt = Date.now();
+function markInteraction(){ lastInteractionAt = Date.now(); state.idleNudged = false; }
 
 function defaultProfile(id){
   return {
@@ -543,7 +728,9 @@ function defaultProfile(id){
     manualPuzzleSize:2,
     createdAt: new Date().toISOString(),
     reportNotes:'',
-    progress:{ wordsSpoken:0, sentencesBuilt:0, practiceCorrect:0, practiceAttempts:0, sequencesCompleted:0, puzzlesCompleted:0 }
+    sensoryEffects:true,
+    unlockedAchievements:[],
+    progress:{ wordsSpoken:0, sentencesBuilt:0, practiceCorrect:0, practiceAttempts:0, sequencesCompleted:0, puzzlesCompleted:0, balloonsPopped:0, bestStreak:0 }
   };
 }
 // Combina un perfil guardado con los valores por defecto (por si se agregaron campos nuevos)
@@ -571,7 +758,9 @@ let state = {
   practice:{ target:null, options:[], locked:false, feedback:null, listening:false, recording:false, recordingUrl:null, mediaRecorder:null },
   sequence:{ model:[], pool:[], built:[], done:false, mistakes:0 },
   puzzle:{ word:null, size:2, slots:[], tray:[], selected:null, wrongSlot:null, done:false },
-  mascotMood:'idle'
+  story:{ storyId:null, sceneIndex:0, sentence:[] },
+  mascotMood:'idle',
+  mascotPoke:false
 };
 
 const $ = (sel, root=document) => root.querySelector(sel);
@@ -802,7 +991,11 @@ async function render(){
   else if(state.view==='practice-sequence') app.appendChild(await renderSequencePractice());
   else if(state.view==='practice-puzzle') app.appendChild(await renderPuzzlePractice());
   else if(state.view==='practice-balloons') app.appendChild(await renderBalloonsPractice());
+  else if(state.view==='story-menu') app.appendChild(await renderStoryMenu());
+  else if(state.view==='story-play') app.appendChild(await renderStoryPlay());
   else if(state.view==='report') app.appendChild(await renderReportView());
+  else if(state.view==='achievements') app.appendChild(await renderAchievementsView());
+  else if(state.view==='quick') app.appendChild(await renderQuickView());
   app.appendChild(el('footer',{class:'note no-print'}, 'Comunica+ · Tablero de comunicación pictográfica para acompañar el aprendizaje del lenguaje.'));
   if(state.currentId && state.profilesCache[state.currentId] && state.view!=='report'){
     const p = state.profilesCache[state.currentId];
@@ -811,6 +1004,12 @@ async function render(){
     if(mascotEl) app.appendChild(mascotEl);
   }else{
     document.body.dataset.style = 'infantil';
+  }
+  if(state.newAchievement){
+    app.appendChild(el('div',{class:'achievement-toast'},[
+      el('span',{class:'emoji'}, state.newAchievement.emoji),
+      el('span',{}, '¡Logro desbloqueado! '+state.newAchievement.title)
+    ]));
   }
   applyEmojiIcons(app);
 }
@@ -829,14 +1028,60 @@ function renderTopbar(){
   if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid', onclick:()=>{state.view='board'; state.mascotMood='idle'; render();}}, '🗣️ Ir al tablero'));
   if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='practice-menu'; state.mascotMood='idle'; render();}}, '🎓 Aprender a hablar'));
   if(state.currentId && state.view!=='report') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='report'; render();}}, '🖨️ Reporte'));
+  if(state.currentId && state.view!=='achievements') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='achievements'; render();}}, '🏆 Logros'));
   if(state.currentId && state.view!=='config') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.editingId=state.currentId; state.view='config'; render();}}, '⚙️ Configurar'));
+  const quickBtn = state.currentId && state.view!=='quick' ? el('button',{class:'pill-btn warn', style:'font-weight:800;', onclick:()=>{state.view='quick'; state.mascotMood='idle'; render();}}, '🆘 Ayuda rápida') : null;
   return el('div',{class:'topbar no-print'},[
     el('div',{class:'brand'},[
       el('div',{class:'brand-badge'},'💬'),
       el('div',{},[ el('h1',{},'Comunica+'), el('span',{}, currentName ? ('Perfil activo: '+currentName) : 'Plataforma AAC para aprender a comunicarse') ])
     ]),
-    el('div',{class:'top-actions'}, actions)
+    el('div',{class:'top-actions'}, quickBtn ? [quickBtn, ...actions] : actions)
   ]);
+}
+
+// ============================== VISTA: LOGROS ==============================
+async function renderAchievementsView(){
+  const p = await loadProfile(state.currentId);
+  const unlocked = new Set(p.unlockedAchievements||[]);
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'card'},[
+    el('div',{class:'section-title'},'🏆 Logros'),
+    el('div',{class:'section-sub'},`Desbloqueados: ${unlocked.size} de ${ACHIEVEMENTS.length}. Se ganan usando el tablero y jugando en "Aprender a hablar".`)
+  ]));
+  const grid = el('div',{class:'achv-grid'});
+  ACHIEVEMENTS.forEach(a=>{
+    const isUnlocked = unlocked.has(a.id);
+    grid.appendChild(el('div',{class:'achv-card'+(isUnlocked?'':' locked')},[
+      el('span',{class:'emoji'}, isUnlocked ? a.emoji : '🔒'),
+      el('div',{class:'title'}, a.title)
+    ]));
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+// ============================== VISTA: COMUNICACIÓN RÁPIDA ==============================
+async function renderQuickView(){
+  const p = await loadProfile(state.currentId);
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'card'},[
+    el('div',{class:'section-title'},'🆘 Comunicación rápida'),
+    el('div',{class:'section-sub'},'Botones grandes para necesidades urgentes. Al tocar uno, lo dice en voz alta de inmediato.')
+  ]));
+  const grid = el('div',{class:'quick-grid'});
+  QUICK_WORDS.forEach(w=>{
+    grid.appendChild(el('button',{class:'quick-btn', onclick: async (ev)=>{
+      markInteraction();
+      state.sentence = [w];
+      await speakItem(p, w);
+      hapticFeedback(p, 'good');
+      sparkAt(ev.currentTarget, p);
+      p.progress.wordsSpoken += 1; await afterProgressUpdate(p);
+    }},[ el('span',{class:'emoji'}, w.emoji), el('span',{class:'label'}, w.label) ]));
+  });
+  wrap.appendChild(grid);
+  return wrap;
 }
 
 // ============================== VISTA: PERFILES ==============================
@@ -951,6 +1196,15 @@ async function renderConfigView(){
       el('div',{class:'trow-sub'},'Si una palabra tiene una grabación propia (ver el micrófono en el tablero), se reproduce esa grabación en vez de la voz sintética.') ]),
     el('label',{class:'switch'},[
       el('input',{type:'checkbox', ...(p.useOwnVoice!==false?{checked:'checked'}:{}), onchange:e=>{p.useOwnVoice=e.target.checked;}}),
+      el('span',{class:'slider-track'})
+    ])
+  ]));
+
+  left.appendChild(el('div',{class:'toggle-row'},[
+    el('div',{},[ el('div',{class:'trow-text'},'📳 Vibración y chispitas al tocar'),
+      el('div',{class:'trow-sub'},'Vibra brevemente y muestra un pequeño brillo al acertar/tocar. Desactivalo si el niño se sobre-estimula fácil.') ]),
+    el('label',{class:'switch'},[
+      el('input',{type:'checkbox', ...(p.sensoryEffects!==false?{checked:'checked'}:{}), onchange:e=>{p.sensoryEffects=e.target.checked;}}),
       el('span',{class:'slider-track'})
     ])
   ]));
@@ -1159,11 +1413,28 @@ async function renderBoardView(){
     el('button',{class:'round-action clear', onclick:async()=>{ state.sentence=[]; render(); }}, '🗑 Borrar'),
     el('button',{class:'round-action speak', onclick:async()=>{
       if(words.length===0) return;
+      markInteraction();
       await speakSentence(p, words);
-      p.progress.sentencesBuilt += 1; await saveProfile(p);
+      p.progress.sentencesBuilt += 1; await afterProgressUpdate(p);
     }}, '🔊 Hablar')
   ]));
   wrap.appendChild(strip);
+
+  const lastWord = words[words.length-1];
+  const predictedLabels = lastWord ? PREDICTIONS[normalizeWord(lastWord.label)] : null;
+  if(predictedLabels && predictedLabels.length){
+    const predRow = el('div',{class:'prediction-row'},[ el('span',{class:'prediction-label'}, '💡 Podría seguir:') ]);
+    predictedLabels.forEach(lbl=>{
+      const w2 = findWordByLabel(p, lbl);
+      predRow.appendChild(el('button',{class:'prediction-chip', onclick: async ()=>{
+        markInteraction();
+        state.sentence.push(w2);
+        await speakItem(p, w2);
+        p.progress.wordsSpoken += 1; await afterProgressUpdate(p); render();
+      }},[ el('span',{class:'emoji'}, w2.emoji), ' '+w2.label ]));
+    });
+    wrap.appendChild(predRow);
+  }
 
   const theme = THEMES[p.theme];
   const catList = [];
@@ -1195,10 +1466,14 @@ async function renderBoardView(){
         ? `background:var(--cat-${activeCat.color}); color:var(--cat-${activeCat.color}-ink);`
         : `background:${activeCat.themeColor}; color:${activeCat.themeInk};`;
       const hasRec = voiceIdx.has(normalizeWord(w.label));
-      const pictoBtn = el('button',{class:'picto-btn', style, onclick: async ()=>{
+      const pictoBtn = el('button',{class:'picto-btn', style, onclick: async (ev)=>{
+        markInteraction();
         state.sentence.push(w);
         await speakItem(p, w);
-        p.progress.wordsSpoken += 1; await saveProfile(p); render();
+        mascotWordReaction(w.label);
+        hapticFeedback(p, 'good');
+        sparkAt(ev.currentTarget, p);
+        p.progress.wordsSpoken += 1; await afterProgressUpdate(p); render();
       }},[ el('span',{class:'emoji'}, w.emoji), el('span',{class:'label'}, w.label) ]);
       const badge = el('button',{class:'voice-badge'+(hasRec?' has-rec':''), title:'Grabar voz propia', onclick: async (e)=>{
         e.stopPropagation();
@@ -1320,6 +1595,7 @@ const METHODS = [
   { id:'practice-sequence', emoji:'🧩', title:'Armar la frase', desc:'Se modela una frase corta y el niño la reconstruye tocando las imágenes en orden. Trabaja la sintaxis.' },
   { id:'practice-puzzle', emoji:'🖼️', title:'Rompecabezas', desc:'Se arma una imagen en piezas tocando la pieza y el lugar donde va. Trabaja percepción visual y atención, con la palabra como premio final.' },
   { id:'practice-balloons', emoji:'🎈', title:'Globos', desc:'Los globos flotan con distintas palabras. Escuchá cuál es y reventá el globo correcto. Divertido y con la misma dificultad progresiva.' },
+  { id:'practice-story', emoji:'📖', title:'Historias', desc:'Situaciones de la vida real (el supermercado, la escuela) donde el niño va eligiendo qué decir. Trabaja lenguaje funcional en contexto.' },
 ];
 
 async function renderPracticeMenu(){
@@ -1339,6 +1615,7 @@ async function renderPracticeMenu(){
         else if(m.id==='practice-say') startSayPractice();
         else if(m.id==='practice-puzzle') startPuzzlePractice();
         else if(m.id==='practice-balloons') startBalloonsPractice();
+        else if(m.id==='practice-story') { state.view='story-menu'; render(); }
         else startSimplePractice(m.id);
       }}, 'Comenzar')
     ]));
@@ -1363,10 +1640,13 @@ async function startSimplePractice(mode){
 }
 async function resolvePracticeChoice(p, target, isTarget, nextMode){
   state.practice.locked = true;
+  markInteraction();
   p.progress.practiceAttempts += 1;
+  registerStreak(p, isTarget);
+  hapticFeedback(p, isTarget?'good':'bad');
   if(isTarget){ state.practice.feedback='good'; state.mascotMood='good'; p.progress.practiceCorrect += 1; speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch); }
   else{ state.practice.feedback={type:'bad', correct:target}; state.mascotMood='bad'; speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch); }
-  await saveProfile(p); render();
+  await afterProgressUpdate(p); render();
   setTimeout(()=>startSimplePractice(nextMode), 2200);
 }
 function feedbackBanner(feedback){
@@ -1590,20 +1870,25 @@ async function renderSequencePractice(){
     pool.forEach(w=>{
       const used = built.includes(w);
       optGrid.appendChild(el('button',{class:'seq-btn'+(used?' used':''), disabled:used, onclick: async ()=>{
+        markInteraction();
         const expected = model[built.length];
         if(w.label===expected.label){
           built.push(w); speakItem(p, w); state.practice.feedback = null;
           if(built.length===model.length){
             state.sequence.done = true;
             state.mascotMood = 'good';
+            registerStreak(p, true);
+            hapticFeedback(p, 'good');
             p.progress.sequencesCompleted = (p.progress.sequencesCompleted||0)+1;
             p.progress.practiceAttempts += 1; p.progress.practiceCorrect += 1;
-            await saveProfile(p);
+            await afterProgressUpdate(p);
             setTimeout(()=>speak('¡Muy bien! '+model.map(x=>x.label).join(' '), p.voiceRate, p.voicePitch), 400);
           }
         }else{
           state.practice.feedback = {type:'bad-hint', wrongWord:w, hintWord:expected};
           state.mascotMood = 'bad';
+          registerStreak(p, false);
+          hapticFeedback(p, 'bad');
           state.sequence.mistakes = (state.sequence.mistakes||0)+1;
           speakItem(p, expected);
         }
@@ -1671,6 +1956,7 @@ async function renderPuzzlePractice(){
       if(selectedPieceId==null) return;
       const piece = tray.find(pc=>pc.id===selectedPieceId);
       if(!piece) return;
+      markInteraction();
       p.progress.practiceAttempts += 1;
       if(piece.row===row && piece.col===col){
         slots[i] = piece;
@@ -1678,20 +1964,24 @@ async function renderPuzzlePractice(){
         state.puzzle.selectedPieceId = null;
         state.practice.feedback = null;
         p.progress.practiceCorrect += 1;
+        registerStreak(p, true);
+        hapticFeedback(p, 'good');
         if(slots.every(s=>s)){
           state.puzzle.done = true;
           state.puzzle.sessionCount = (state.puzzle.sessionCount||0)+1;
           p.progress.puzzlesCompleted = (p.progress.puzzlesCompleted||0)+1;
-          await saveProfile(p);
+          await afterProgressUpdate(p);
           setTimeout(()=>speakItem(p, word), 400);
           state.puzzle.autoTimeoutId = setTimeout(()=>startPuzzlePractice(false), 3200);
         }else{
-          await saveProfile(p);
+          await afterProgressUpdate(p);
         }
       }else{
         state.practice.feedback = {type:'wrong-slot'};
         state.puzzle.wrongSlotIndex = i;
-        await saveProfile(p);
+        registerStreak(p, false);
+        hapticFeedback(p, 'bad');
+        await afterProgressUpdate(p);
         setTimeout(()=>{ state.puzzle.wrongSlotIndex=null; state.practice.feedback=null; render(); }, 900);
       }
       render();
@@ -1748,16 +2038,20 @@ async function startBalloonsPractice(resetSession){
 }
 async function resolveBalloon(p, target, isTarget){
   state.practice.locked = true;
+  markInteraction();
   p.progress.practiceAttempts += 1;
+  registerStreak(p, isTarget);
+  hapticFeedback(p, isTarget?'good':'bad');
   if(isTarget){
     state.practice.feedback='good'; state.mascotMood='good'; p.progress.practiceCorrect += 1;
+    p.progress.balloonsPopped = (p.progress.balloonsPopped||0)+1;
     state.balloonGame.sessionCount = (state.balloonGame.sessionCount||0)+1;
     speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch);
   }else{
     state.practice.feedback = {type:'bad', correct:target}; state.mascotMood='bad';
     speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch);
   }
-  await saveProfile(p); render();
+  await afterProgressUpdate(p); render();
   state.balloonGame.autoTimeoutId = setTimeout(()=>startBalloonsPractice(false), 2400);
 }
 async function renderBalloonsPractice(){
@@ -1796,6 +2090,114 @@ async function renderBalloonsPractice(){
   return wrap;
 }
 
+// -------- Historias interactivas --------
+const STORIES = [
+  { id:'supermercado', title:'Vamos al supermercado', emoji:'🛒',
+    desc:'Elegí qué decir en cada paso para hacer las compras con mamá o papá.',
+    scenes:[
+      { prompt:'Llegamos al supermercado. ¿Qué le decís?', promptEmoji:'🏪',
+        options:[{label:'quiero jugo', emoji:'🧃'},{label:'quiero galletas', emoji:'🍪'},{label:'quiero fruta', emoji:'🍎'}] },
+      { prompt:'Te preguntan si necesitás algo más.', promptEmoji:'🛒',
+        options:[{label:'necesito agua', emoji:'💧'},{label:'necesito pan', emoji:'🍞'},{label:'no necesito nada', emoji:'❌'}] },
+      { prompt:'Ya pagaron. ¿Qué le decís a la cajera?', promptEmoji:'💳',
+        options:[{label:'gracias', emoji:'💜'},{label:'adiós', emoji:'🙋‍♂️'}] },
+    ],
+    ending:'¡Genial! Hiciste las compras y usaste tus palabras. 🎉' },
+  { id:'escuela', title:'Vamos a la escuela', emoji:'🏫',
+    desc:'Practicá qué decir en un día de escuela, desde que llegás hasta el recreo.',
+    scenes:[
+      { prompt:'Llegás a la escuela. ¿Qué le decís a tu maestra?', promptEmoji:'🏫',
+        options:[{label:'hola', emoji:'👋'},{label:'estoy feliz', emoji:'😄'},{label:'estoy nervioso', emoji:'😬'}] },
+      { prompt:'Es la hora del recreo. ¿Qué querés hacer?', promptEmoji:'🤸',
+        options:[{label:'quiero jugar', emoji:'🧩'},{label:'quiero agua', emoji:'💧'},{label:'quiero baño', emoji:'🚽'}] },
+      { prompt:'Un compañero te ofrece ayuda con la tarea.', promptEmoji:'📝',
+        options:[{label:'sí, por favor', emoji:'🙏'},{label:'no, gracias', emoji:'❌'}] },
+    ],
+    ending:'¡Muy bien! Tuviste un gran día en la escuela. 🌟' },
+  { id:'casa', title:'Un día en casa', emoji:'🏠',
+    desc:'Situaciones cotidianas en casa: comidas, juegos y momentos de descanso.',
+    scenes:[
+      { prompt:'Es la hora de comer. ¿Qué le decís a tu familia?', promptEmoji:'🍽️',
+        options:[{label:'tengo hambre', emoji:'😋'},{label:'no tengo hambre', emoji:'❌'},{label:'quiero comer', emoji:'🍎'}] },
+      { prompt:'Después de comer, ¿qué querés hacer?', promptEmoji:'🧸',
+        options:[{label:'quiero jugar', emoji:'🧩'},{label:'estoy cansado', emoji:'🥱'},{label:'quiero dormir', emoji:'😴'}] },
+      { prompt:'Se hizo de noche.', promptEmoji:'🌙',
+        options:[{label:'buenas noches', emoji:'🌙'},{label:'te quiero', emoji:'💜'}] },
+    ],
+    ending:'¡Qué lindo día! Descansá, mañana seguimos jugando. 🌙' },
+];
+function startStory(storyId){
+  markInteraction();
+  state.story = { storyId, sceneIndex:0, sentence:[] };
+  state.mascotMood = 'idle';
+  state.view = 'story-play';
+  render();
+}
+async function renderStoryMenu(){
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'card'},[
+    el('div',{class:'section-title'},'📖 Historias interactivas'),
+    el('div',{class:'section-sub'},'Situaciones de la vida real donde el niño va eligiendo qué decir en cada paso. Trabaja lenguaje funcional en contexto, no solo palabras sueltas.')
+  ]));
+  const grid = el('div',{class:'story-grid'});
+  STORIES.forEach(s=>{
+    grid.appendChild(el('div',{class:'story-card'},[
+      el('span',{class:'s-emoji'}, s.emoji), el('h3',{}, s.title), el('p',{}, s.desc),
+      el('button',{class:'pill-btn solid', onclick:()=>startStory(s.id)}, 'Comenzar')
+    ]));
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+async function renderStoryPlay(){
+  const p = await loadProfile(state.currentId);
+  const story = STORIES.find(s=>s.id===state.story.storyId);
+  const { sceneIndex, sentence } = state.story;
+  const wrap = el('div',{class:'practice-wrap'});
+  wrap.appendChild(el('div',{class:'section-sub', style:'margin-bottom:10px;'}, story.emoji+' '+story.title));
+
+  const sentStrip = el('div',{class:'story-sentence'});
+  if(sentence.length===0) sentStrip.appendChild(el('span',{class:'empty-hint'},'Tu historia va a aparecer acá…'));
+  else sentence.forEach(w=> sentStrip.appendChild(el('div',{class:'sentence-word'},[el('span',{class:'emoji'},w.emoji), el('span',{},w.label)])));
+  wrap.appendChild(sentStrip);
+
+  if(sceneIndex < story.scenes.length){
+    const scene = story.scenes[sceneIndex];
+    wrap.appendChild(el('div',{class:'story-scene'},[
+      el('span',{class:'s-emoji'}, scene.promptEmoji),
+      el('div',{class:'s-text'}, scene.prompt)
+    ]));
+    const optGrid = el('div',{class:'story-options'});
+    scene.options.forEach(opt=>{
+      optGrid.appendChild(el('button',{class:'story-option', onclick: async (ev)=>{
+        markInteraction();
+        state.story.sentence.push(opt);
+        await speakItem(p, opt);
+        hapticFeedback(p, 'good');
+        sparkAt(ev.currentTarget, p);
+        mascotWordReaction(opt.label);
+        state.story.sceneIndex += 1;
+        p.progress.wordsSpoken += 1;
+        if(state.story.sceneIndex>=story.scenes.length) p.progress.sentencesBuilt += 1;
+        await afterProgressUpdate(p); render();
+      }},[ el('span',{class:'emoji'}, opt.emoji), el('span',{class:'label'}, opt.label) ]));
+    });
+    wrap.appendChild(optGrid);
+  }else{
+    wrap.appendChild(el('div',{class:'story-scene'},[
+      el('span',{class:'s-emoji'},'🎉'),
+      el('div',{class:'s-text'}, story.ending)
+    ]));
+    wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
+      el('button',{class:'round-action speak', onclick:()=>speakSentence(p, sentence)}, '🔊 Escuchar toda la historia'),
+      el('button',{class:'round-action back', onclick:()=>startStory(story.id)}, '🔁 De nuevo'),
+      el('button',{class:'round-action back', onclick:()=>{state.view='story-menu'; render();}}, '📖 Otra historia')
+    ]));
+  }
+  wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Cada elección construye una frase con sentido dentro de una situación real, para practicar comunicación funcional más allá de palabras sueltas.'));
+  return wrap;
+}
+
 // ---------- Inicio ----------
 (async function init(){
   await loadProfileList();
@@ -1806,6 +2208,25 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{ /* si no está hospedado con sw.js al lado, sigue funcionando igual */ });
   });
 }
+// Gesto automático de la mascota cada pocos segundos, para que nunca se vea quieta.
+// Actúa directo sobre el elemento en pantalla (sin llamar a render()), así nunca corta
+// lo que el usuario esté escribiendo en otra parte de la app en ese momento.
+(function scheduleMascotFlourish(){
+  const wait = 5000 + Math.random()*4000; // entre 5 y 9 segundos, para que se sienta natural
+  setTimeout(()=>{
+    const avatar = document.querySelector('.mascot-avatar');
+    if(avatar && !avatar.classList.contains('mascot-poke')){
+      avatar.classList.add('mascot-flourish');
+      setTimeout(()=>avatar.classList.remove('mascot-flourish'), 900);
+    }
+    // Si pasó bastante tiempo sin que el niño toque nada, la mascota invita a seguir jugando (una sola vez por período de inactividad).
+    if(avatar && !state.idleNudged && (Date.now()-lastInteractionAt) > 45000 && state.currentId){
+      const p = state.profilesCache[state.currentId];
+      if(p){ state.idleNudged = true; speak(MASCOT_NUDGE, p.voiceRate, p.voicePitch); }
+    }
+    scheduleMascotFlourish();
+  }, wait);
+})();
 </script>
 </body>
 </html>
