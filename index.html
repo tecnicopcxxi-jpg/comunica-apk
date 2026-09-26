@@ -561,6 +561,7 @@ const THEMES = {
            {label:'avión',emoji:'✈️'},{label:'barco',emoji:'⛴️'},{label:'bicicleta',emoji:'🚲'}]},
 };
 
+const APP_VERSION = 'v2026.09.26-2';
 const AVATAR_CHOICES = ['🙂','👦','👧','🧒','😊','🐻','🐰','🦁','🐼','🦊'];
 
 // ---------- Mascota: compañero animado, original (no personajes con derechos de autor) ----------
@@ -801,17 +802,28 @@ async function saveProfile(p){ state.profilesCache[p.id]=p; try{ await Storage.s
 async function deleteProfileStorage(id){ try{ await Storage.delete('profile:'+id); }catch(e){} delete state.profilesCache[id]; }
 
 // ---------- Voz ----------
+// Habla un texto en voz alta. Si la síntesis ya está hablando, primero cancela y espera
+// un instante antes de lanzar la nueva frase — en Chrome/Android, cancelar y hablar en el
+// mismo instante hace que el audio se pierda o se desfase. Esperar ~60ms lo evita.
 function speak(text, rate=0.9, pitch=1.05){
   try{
     if(!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang='es-ES';
-    const voices = window.speechSynthesis.getVoices();
-    const esVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('es'));
-    if(esVoice) u.voice = esVoice;
-    u.rate = rate; u.pitch = pitch;
-    window.speechSynthesis.speak(u);
+    const synth = window.speechSynthesis;
+    const doSpeak = ()=>{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang='es-ES';
+      const voices = synth.getVoices();
+      const esVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('es'));
+      if(esVoice) u.voice = esVoice;
+      u.rate = rate; u.pitch = pitch;
+      synth.speak(u);
+    };
+    if(synth.speaking || synth.pending){
+      synth.cancel();
+      setTimeout(doSpeak, 60);
+    }else{
+      doSpeak();
+    }
   }catch(e){}
 }
 if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = ()=>{}; }
@@ -996,7 +1008,7 @@ async function render(){
   else if(state.view==='report') app.appendChild(await renderReportView());
   else if(state.view==='achievements') app.appendChild(await renderAchievementsView());
   else if(state.view==='quick') app.appendChild(await renderQuickView());
-  app.appendChild(el('footer',{class:'note no-print'}, 'Comunica+ · Tablero de comunicación pictográfica para acompañar el aprendizaje del lenguaje.'));
+  app.appendChild(el('footer',{class:'note no-print'}, `Comunica+ · Tablero de comunicación pictográfica para acompañar el aprendizaje del lenguaje. · ${APP_VERSION}`));
   if(state.currentId && state.profilesCache[state.currentId] && state.view!=='report'){
     const p = state.profilesCache[state.currentId];
     document.body.dataset.style = p.visualStyle==='adolescente' ? 'adolescente' : 'infantil';
@@ -1034,9 +1046,15 @@ function renderTopbar(){
   return el('div',{class:'topbar no-print'},[
     el('div',{class:'brand'},[
       el('div',{class:'brand-badge'},'💬'),
-      el('div',{},[ el('h1',{},'Comunica+'), el('span',{}, currentName ? ('Perfil activo: '+currentName) : 'Plataforma AAC para aprender a comunicarse') ])
+      el('div',{},[
+        el('h1',{},'Comunica+'),
+        el('span',{}, currentName ? ('Perfil activo: '+currentName) : 'Plataforma AAC para aprender a comunicarse')
+      ])
     ]),
-    el('div',{class:'top-actions'}, quickBtn ? [quickBtn, ...actions] : actions)
+    el('div',{class:'top-actions'},[
+      el('span',{style:'background:#FFB43C; color:#4A2E00; font-family:\'Baloo 2\'; font-weight:800; font-size:12px; padding:5px 10px; border-radius:999px; align-self:center;'}, APP_VERSION),
+      ...(quickBtn ? [quickBtn, ...actions] : actions)
+    ])
   ]);
 }
 
