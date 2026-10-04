@@ -287,6 +287,15 @@
     animation:mascot-reaction-rise .9s ease forwards;}
   @keyframes mascot-reaction-rise{ 0%{transform:translateY(0) scale(.6); opacity:0;} 25%{opacity:1; transform:translateY(-10px) scale(1.15);} 100%{transform:translateY(-46px) scale(1); opacity:0;} }
 
+  /* ---------- Escaneo automático / acceso por switch ---------- */
+  .scan-item.scan-active{ outline:6px solid #FFD700 !important; outline-offset:3px;
+    box-shadow:0 0 0 10px rgba(255,215,0,.35) !important; position:relative; z-index:45;
+    animation:scan-pulse 1s ease-in-out infinite alternate;}
+  @keyframes scan-pulse{ from{outline-color:#FFD700;} to{outline-color:#FFF176;} }
+  .scan-select-btn{ position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:80;
+    background:#FFD700; color:#3A2E00; border:4px solid #fff; border-radius:999px; padding:16px 30px;
+    font-family:'Baloo 2'; font-weight:800; font-size:17px; box-shadow:0 10px 26px -6px rgba(0,0,0,.45);}
+
   /* ---------- Chispitas al tocar (efecto multisensorial) ---------- */
   .spark-layer{ position:fixed; width:0; height:0; z-index:60; pointer-events:none;}
   .spark-piece{ position:absolute; font-size:30px; left:0; top:0;
@@ -599,7 +608,7 @@ const THEMES = {
            {label:'avión',emoji:'✈️'},{label:'barco',emoji:'⛴️'},{label:'bicicleta',emoji:'🚲'}]},
 };
 
-const APP_VERSION = 'v2026.09.28-2';
+const APP_VERSION = 'v2026.10.01-1';
 const AVATAR_CHOICES = ['🙂','👦','👧','🧒','😊','🐻','🐰','🦁','🐼','🦊'];
 
 // ---------- Mascota: compañero animado, original (no personajes con derechos de autor) ----------
@@ -856,19 +865,21 @@ function avatarSVG(cfg, size){
 }
 // Confeti que cae por toda la pantalla (solo en modo sensorial ALTO).
 function bigBurst(p){
-  if(!p || p.sensoryEffects===false || p.sensoryIntensity!=='alto') return;
+  if(!p || p.sensoryEffects===false) return;
   try{
+    const alto = p.sensoryIntensity==='alto';
     const layer = document.createElement('div');
     layer.className = 'fall-layer';
     const pieces = ['🎉','✨','⭐','🎊','💜','🌟','🎈'];
-    for(let i=0;i<26;i++){
+    const count = alto ? 26 : 14;
+    for(let i=0;i<count;i++){
       const s = document.createElement('span');
       s.className = 'fall-piece';
       s.textContent = pieces[i%pieces.length];
       s.style.left = (Math.random()*96)+'%';
       s.style.animationDelay = (Math.random()*0.5)+'s';
       s.style.animationDuration = (1.4+Math.random()*1)+'s';
-      s.style.fontSize = (22+Math.random()*18)+'px';
+      s.style.fontSize = (alto ? (22+Math.random()*18) : (18+Math.random()*10))+'px';
       layer.appendChild(s);
     }
     document.body.appendChild(layer);
@@ -896,6 +907,9 @@ function defaultProfile(id){
     manualPuzzleSize:2,
     createdAt: new Date().toISOString(),
     reportNotes:'',
+    scanningEnabled:false,
+    scanSpeed:1800,
+    scanAudio:true,
     sensoryEffects:true,
     sensoryIntensity:'normal',
     themeSounds:true,
@@ -989,8 +1003,7 @@ function speak(text, rate=0.9, pitch=1.05){
       if(!clean) return;
       const u = new SpeechSynthesisUtterance(clean);
       u.lang='es-ES';
-      const voices = synth.getVoices();
-      const esVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('es'));
+      const esVoice = getBestSpanishVoice();
       if(esVoice) u.voice = esVoice;
       u.rate = rate; u.pitch = pitch;
       synth.speak(u);
@@ -1003,7 +1016,30 @@ function speak(text, rate=0.9, pitch=1.05){
     }
   }catch(e){}
 }
-if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = ()=>{}; }
+if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = ()=>{ bestVoiceCache=null; }; }
+// Elige la mejor voz en español disponible: prioriza voces de red/Google (suenan mucho más naturales
+// que las robóticas locales) y, entre esas, las de variante latinoamericana antes que las de España.
+let bestVoiceCache = null;
+function getBestSpanishVoice(){
+  if(bestVoiceCache) return bestVoiceCache;
+  try{
+    const voices = window.speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith('es'));
+    if(voices.length===0) return null;
+    const score = v=>{
+      let s = 0;
+      if(/google/i.test(v.name)) s += 5;
+      if(v.localService===false) s += 3;
+      const lang = v.lang.toLowerCase();
+      if(lang==='es-419' || lang==='es-us' || lang==='es-ar' || lang==='es-mx') s += 2;
+      else if(lang==='es-es') s += 1;
+      if(/female|mujer/i.test(v.name)) s += 1;
+      return s;
+    };
+    voices.sort((a,b)=>score(b)-score(a));
+    bestVoiceCache = voices[0];
+    return bestVoiceCache;
+  }catch(e){ return null; }
+}
 function getSpeechRecognition(){ return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
 function canRecordAudio(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
 function normalizeWord(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
@@ -1057,6 +1093,118 @@ async function importVoiceRecordings(p, file){
     render();
   }catch(err){
     alert('No se pudo leer el archivo. Verificá que sea un backup de Comunica+ válido (.json).');
+  }
+}
+// ---------- Escaneo automático / acceso por switch ----------
+// Pensado para personas que no pueden tocar un botón específico con precisión (parálisis cerebral,
+// ELA, movilidad reducida). La app recorre sola los botones marcados como ".scan-item" y resalta uno
+// a la vez; la persona activa un único "interruptor" (tocar cualquier parte de la pantalla, la tecla
+// Espacio/Enter, o un switch externo Bluetooth que emula esas teclas) para elegir el que está iluminado.
+let scanTargets = [];
+let scanIdx = -1;
+let scanTimerId = null;
+function stopScanning(){
+  if(scanTimerId){ clearInterval(scanTimerId); scanTimerId = null; }
+  scanTargets.forEach(el=>{ try{ el.classList.remove('scan-active'); }catch(e){} });
+  scanTargets = [];
+  scanIdx = -1;
+}
+function highlightScan(p){
+  scanTargets.forEach((el,i)=> el.classList.toggle('scan-active', i===scanIdx));
+  const current = scanTargets[scanIdx];
+  if(current){
+    try{ current.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(e){}
+    if(p.scanAudio!==false){
+      const label = current.getAttribute('data-scan-label') || current.textContent.trim();
+      if(label) speak(label, p.voiceRate, p.voicePitch);
+    }
+  }
+}
+function advanceScan(p){
+  if(scanTargets.length===0) return;
+  scanIdx = (scanIdx+1) % scanTargets.length;
+  highlightScan(p);
+}
+// Activa (o reinicia) el recorrido según lo que haya marcado como escaneable en la pantalla actual.
+// Si la cantidad de botones no cambió respecto de la pasada anterior, mantiene dónde iba (no vuelve al inicio).
+function setupScanning(p){
+  const prevLen = scanTargets.length;
+  const prevIdx = scanIdx;
+  if(scanTimerId){ clearInterval(scanTimerId); scanTimerId = null; }
+  scanTargets.forEach(el=>{ try{ el.classList && el.classList.remove('scan-active'); }catch(e){} });
+  if(!p || !p.scanningEnabled){ scanTargets = []; scanIdx = -1; return; }
+  scanTargets = Array.from(document.querySelectorAll('#app .scan-item'));
+  if(scanTargets.length===0){ scanIdx = -1; return; }
+  scanIdx = (prevIdx>=0 && prevIdx<scanTargets.length && scanTargets.length===prevLen) ? prevIdx : 0;
+  highlightScan(p);
+  scanTimerId = setInterval(()=>advanceScan(p), Math.max(600, p.scanSpeed||1800));
+}
+// Selecciona (simula un toque sobre) el botón actualmente iluminado.
+function selectScan(){
+  if(scanTargets.length===0 || scanIdx<0) return;
+  const el = scanTargets[scanIdx];
+  if(el && !el.disabled) el.click();
+}
+// El "interruptor": tocar cualquier parte de la pantalla, o las teclas Espacio/Enter (switches externos
+// por Bluetooth suelen emular estas teclas), eligen el botón resaltado — sin tener que acertarle con precisión.
+document.addEventListener('keydown', (e)=>{
+  if(e.code!=='Space' && e.code!=='Enter') return;
+  const p = state.currentId ? state.profilesCache[state.currentId] : null;
+  if(p && p.scanningEnabled){ e.preventDefault(); selectScan(); }
+});
+document.addEventListener('click', (e)=>{
+  const p = state.currentId ? state.profilesCache[state.currentId] : null;
+  if(!p || !p.scanningEnabled) return;
+  if(e.target.closest('.scan-select-btn')) return; // ya lo maneja su propio onclick
+  if(e.target.closest('.scan-item')) return; // un toque directo sobre el botón ya lo activa solo
+  selectScan();
+});
+
+// ---------- Copia de seguridad COMPLETA del perfil (configuración + progreso + logros + voces) ----------
+// Exporta todo lo necesario para reconstruir el perfil en otro dispositivo: datos de configuración,
+// categorías activas, dificultad, progreso, logros desbloqueados, palabras personalizadas y las
+// grabaciones de voz propia. Es más abarcativo que "Exportar grabaciones", que solo guarda las voces.
+async function exportFullProfile(p){
+  const idx = await ensureVoiceIndex(p.id);
+  const voiceClips = {};
+  for(const key of idx){
+    try{ const res = await Storage.get('voice-clip:'+p.id+':'+key); if(res && res.value) voiceClips[key]=res.value; }catch(e){}
+  }
+  const payload = { app:'Comunica+', kind:'full-profile-backup', version:1, exportedAt:new Date().toISOString(), profile:p, voiceClips };
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = (p.name||'perfil').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-') || 'perfil';
+  a.download = `comunica_backup_${safeName}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+// Restaura un backup completo como un perfil NUEVO (nunca pisa uno existente, para evitar pérdidas
+// accidentales). El perfil restaurado aparece en la lista de perfiles con el mismo nombre y datos.
+async function importFullProfile(file){
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data || data.kind!=='full-profile-backup' || !data.profile) throw new Error('formato inválido');
+    const newId = 'p_'+Date.now();
+    const restored = withDefaults(Object.assign({}, data.profile, { id:newId }));
+    await saveProfile(restored);
+    state.profileIds.push(newId);
+    await saveProfileList();
+    let voiceCount = 0;
+    if(data.voiceClips && typeof data.voiceClips==='object'){
+      const idx = await ensureVoiceIndex(newId);
+      for(const [key,val] of Object.entries(data.voiceClips)){
+        try{ await Storage.set('voice-clip:'+newId+':'+key, val); idx.add(key); voiceCount++; }catch(e){}
+      }
+      await saveVoiceIndex(newId, idx);
+    }
+    alert(`Perfil restaurado como nuevo: "${restored.name||'Sin nombre'}"${voiceCount?` (con ${voiceCount} grabaciones de voz)`:''}. Lo vas a ver en la lista de perfiles.`);
+    state.view = 'profiles';
+    render();
+  }catch(err){
+    alert('No se pudo leer el archivo. Verificá que sea un backup completo de Comunica+ válido (.json).');
   }
 }
 // Referencia al audio grabado que está sonando ahora, para poder cortarlo si se toca otra palabra
@@ -1238,21 +1386,51 @@ function barChartSVG(items){
   const totalW = leftPad+chartW+rightPad;
   return `<svg viewBox="0 0 ${totalW} ${totalH}" width="100%" style="max-width:${totalW}px;">${bars}</svg>`;
 }
+// Construye el "recorte" visual de una pieza del rompecabezas. Usa una etiqueta <img> real
+// (igual que el resto de la app, que sí carga siempre) en vez de solo un fondo CSS, y si esa
+// imagen puntual llegara a fallar, muestra el emoji directo como respaldo — nunca queda en blanco.
+function puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, row, col){
+  const box = document.createElement('div');
+  box.className = 'piece-bg';
+  box.style.cssText = `width:${cell}px;height:${cell}px;position:relative;overflow:hidden;`;
+  const showFallback = ()=>{
+    box.innerHTML = '';
+    const span = document.createElement('span');
+    span.textContent = word.emoji;
+    span.style.cssText = `display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:${Math.round(cell*0.55)}px;`;
+    box.appendChild(span);
+    applyEmojiIcons(box);
+  };
+  if(svgUrl){
+    const img = document.createElement('img');
+    img.alt = '';
+    img.style.cssText = `position:absolute; left:${-col*cell}px; top:${-row*cell}px; width:${FRAME_PX}px; height:${FRAME_PX}px; max-width:none;`;
+    img.onerror = showFallback;
+    img.src = svgUrl;
+    box.appendChild(img);
+  }else{
+    showFallback();
+  }
+  return box;
+}
 function getPuzzleSize(p){
   if(!p.autoDifficulty) return Math.max(2, Math.min(3, p.manualPuzzleSize||2));
   return getOptionsCount(p) >= 4 ? 3 : 2;
 }
-// Devuelve la URL del SVG (vectorial, nítido a cualquier tamaño) para un emoji, usando Twemoji.
+// Devuelve la URL de imagen para un emoji, usando el mismo motor (Twemoji) que ya se usa en toda la app
+// para que sea exactamente la misma URL que funciona en los demás lugares (evita imágenes rotas).
 function emojiToSvgUrl(emoji){
   try{
-    if(window.twemoji && twemoji.convert && twemoji.convert.toCodePoint){
-      const code = twemoji.convert.toCodePoint(emoji);
-      // Se usa el mismo formato PNG que el resto de la app (72x72), que es el que
-      // realmente está disponible en el CDN. La carpeta "svg" no siempre existe ahí.
-      return 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/'+code+'.png';
-    }
-  }catch(e){}
-  return null;
+    if(!window.twemoji) return null;
+    // Se arma en un elemento invisible real y se usa el mismo twemoji.parse(nodo, ...) que ya
+    // funciona para todos los demás emojis de la app, en vez de reconstruir la URL "a mano"
+    // (eso fallaba para algunos emojis). Así se garantiza exactamente la misma URL que sí carga.
+    const span = document.createElement('span');
+    span.textContent = emoji;
+    twemoji.parse(span, { base:'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/', folder:'72x72', ext:'.png' });
+    const img = span.querySelector('img');
+    return img ? img.getAttribute('src') : null;
+  }catch(e){ return null; }
 }
 
 // ---------- Render raíz ----------
@@ -1297,6 +1475,13 @@ async function render(){
     ]));
   }
   applyEmojiIcons(app);
+  const scanP = state.currentId ? state.profilesCache[state.currentId] : null;
+  if(scanP && scanP.scanningEnabled && state.view!=='config'){
+    app.appendChild(el('button',{class:'scan-select-btn', onclick:()=>selectScan()}, '👆 TOCÁ PARA ELEGIR'));
+    setupScanning(scanP);
+  }else{
+    stopScanning();
+  }
 }
 function applyEmojiIcons(root){
   try{
@@ -1363,7 +1548,7 @@ async function renderQuickView(){
   ]));
   const grid = el('div',{class:'quick-grid'});
   QUICK_WORDS.forEach(w=>{
-    grid.appendChild(el('button',{class:'quick-btn', onclick: async (ev)=>{
+    grid.appendChild(el('button',{class:'quick-btn scan-item', 'data-scan-label':w.label, onclick: async (ev)=>{
       markInteraction();
       state.sentence = [w];
       hapticFeedback(p, 'good');
@@ -1400,8 +1585,17 @@ async function renderProfilesView(){
   grid.appendChild(el('button',{class:'add-profile-card', onclick:createNewProfile},[ el('div',{class:'plus'},'+'), el('div',{}, 'Crear nuevo perfil') ]));
   wrap.appendChild(grid);
   if(state.profileIds.length===0){
-    wrap.appendChild(el('div',{class:'helper-note'}, '👉 Todavía no hay perfiles creados. Tocá "Crear nuevo perfil" para configurar el primero.'));
+    wrap.appendChild(el('div',{class:'helper-note'}, '👉 Todavía no hay perfiles creados. Tocá "Crear nuevo perfil" para configurar el primero, o restaurá uno desde una copia de seguridad.'));
   }
+  const restoreInput = el('input',{type:'file', accept:'.json,application/json', style:'display:none;', onchange: async (e)=>{
+    const file = e.target.files[0];
+    if(file) await importFullProfile(file);
+    e.target.value = '';
+  }});
+  wrap.appendChild(restoreInput);
+  wrap.appendChild(el('div',{class:'save-bar', style:'justify-content:flex-start; margin-top:4px;'},[
+    el('button',{class:'pill-btn', onclick:()=>{ restoreInput.click(); }}, '📂 Restaurar perfil desde copia de seguridad')
+  ]));
   return wrap;
 }
 async function createNewProfile(){
@@ -1619,8 +1813,53 @@ async function renderConfigView(){
   customCard.appendChild(wordList);
   right.appendChild(customCard);
 
+  const scanCard = el('div',{class:'card'}); scanCard.style.marginTop='18px';
+  scanCard.appendChild(el('div',{class:'section-title'},'🔘 Acceso por switch / escaneo automático'));
+  scanCard.appendChild(el('div',{class:'section-sub'},'Para personas que no pueden tocar un botón específico con precisión (parálisis cerebral, ELA, movilidad reducida). La app resalta los botones uno por uno sola; con un único interruptor —tocar cualquier parte de la pantalla, la tecla Espacio/Enter, o un switch externo Bluetooth— se elige el que está iluminado.'));
+  scanCard.appendChild(el('div',{class:'toggle-row'},[
+    el('div',{},[ el('div',{class:'trow-text'},'Activar escaneo automático'),
+      el('div',{class:'trow-sub'},'Mientras está activo, tocar la pantalla selecciona el botón resaltado en vez de tocar directamente.') ]),
+    el('label',{class:'switch'},[
+      el('input',{type:'checkbox', ...(p.scanningEnabled?{checked:'checked'}:{}), onchange:e=>{p.scanningEnabled=e.target.checked; render();}}),
+      el('span',{class:'slider-track'})
+    ])
+  ]));
+  if(p.scanningEnabled){
+    scanCard.appendChild(el('div',{class:'field', style:'margin-top:12px;'},[
+      el('label',{},'Velocidad del recorrido'),
+      el('div',{class:'grid-size-options'}, [
+        {label:'Lenta', ms:2800}, {label:'Media', ms:1800}, {label:'Rápida', ms:1100}
+      ].map(opt=> el('button',{class:'chip-option'+(p.scanSpeed===opt.ms?' selected':''), onclick:()=>{p.scanSpeed=opt.ms; render();}}, opt.label)))
+    ]));
+    scanCard.appendChild(el('div',{class:'toggle-row'},[
+      el('div',{},[ el('div',{class:'trow-text'},'Decir cada palabra mientras escanea'),
+        el('div',{class:'trow-sub'},'Útil para quienes no pueden ver bien la pantalla.') ]),
+      el('label',{class:'switch'},[
+        el('input',{type:'checkbox', ...(p.scanAudio!==false?{checked:'checked'}:{}), onchange:e=>{p.scanAudio=e.target.checked;}}),
+        el('span',{class:'slider-track'})
+      ])
+    ]));
+    scanCard.appendChild(el('div',{class:'helper-note'}, '⚠️ Mientras el escaneo está activo en el tablero o los juegos, tocar cualquier parte de la pantalla selecciona lo resaltado. Para seguir usando la app normalmente (por ejemplo para cambiar esta configuración), volvé a apagar el interruptor de arriba.'));
+  }
+  right.appendChild(scanCard);
+
+  const fullBackupCard = el('div',{class:'card'}); fullBackupCard.style.marginTop='18px';
+  fullBackupCard.appendChild(el('div',{class:'section-title'},'💾 Copia de seguridad completa del perfil'));
+  fullBackupCard.appendChild(el('div',{class:'section-sub'},'Guarda TODO: configuración, categorías activas, dificultad, progreso, logros, palabras personalizadas y voces grabadas. Recomendado antes de cambiar de celular o borrar el navegador. Al restaurar, se crea un perfil nuevo (nunca pisa el actual).'));
+  const fullImportInput = el('input',{type:'file', accept:'.json,application/json', style:'display:none;', onchange: async (e)=>{
+    const file = e.target.files[0];
+    if(file) await importFullProfile(file);
+    e.target.value = '';
+  }});
+  fullBackupCard.appendChild(fullImportInput);
+  fullBackupCard.appendChild(el('div',{class:'save-bar', style:'justify-content:flex-start;'},[
+    el('button',{class:'pill-btn solid', onclick: async ()=>{ await exportFullProfile(p); }}, '💾 Exportar perfil completo'),
+    el('button',{class:'pill-btn', onclick: ()=>{ fullImportInput.click(); }}, '📂 Restaurar desde backup')
+  ]));
+  right.appendChild(fullBackupCard);
+
   const backupCard = el('div',{class:'card'}); backupCard.style.marginTop='18px';
-  backupCard.appendChild(el('div',{class:'section-title'},'Copia de seguridad de voces grabadas'));
+  backupCard.appendChild(el('div',{class:'section-title'},'Copia de seguridad de voces grabadas (solo voz)'));
   backupCard.appendChild(el('div',{class:'section-sub'},'Exportá las grabaciones de voz propia a un archivo para no perderlas si cambian de dispositivo, y volvé a importarlas cuando lo necesiten.'));
   const importInput = el('input',{type:'file', accept:'.json,application/json', style:'display:none;', onchange: async (e)=>{
     const file = e.target.files[0];
@@ -1734,8 +1973,8 @@ async function renderBoardView(){
   if(words.length===0) strip.appendChild(el('span',{class:'empty-hint'},'Tocá una imagen para empezar a armar una frase…'));
   else words.forEach(w=> strip.appendChild(el('div',{class:'sentence-word'},[ el('span',{class:'emoji'}, w.emoji), el('span',{}, w.label) ])));
   strip.appendChild(el('div',{class:'sentence-actions'},[
-    el('button',{class:'round-action clear', onclick:async()=>{ state.sentence=[]; render(); }}, '🗑 Borrar'),
-    el('button',{class:'round-action speak', onclick:async()=>{
+    el('button',{class:'round-action clear scan-item', onclick:async()=>{ state.sentence=[]; render(); }}, '🗑 Borrar'),
+    el('button',{class:'round-action speak scan-item', onclick:async()=>{
       if(words.length===0) return;
       markInteraction();
       await speakSentence(p, words);
@@ -1772,7 +2011,7 @@ async function renderBoardView(){
     const active = state.activeCategory===c.id;
     let style = '';
     if(active) style = c.color ? `background:var(--cat-${c.color}); border-color:var(--cat-${c.color});` : `background:${c.themeColor}; border-color:${c.themeColor}; color:${c.themeInk};`;
-    tabs.appendChild(el('button',{class:'tab-btn'+(active?' active':''), style, onclick:()=>{ state.activeCategory=c.id; state.boardPage=0; render(); }}, c.emoji+' '+c.name));
+    tabs.appendChild(el('button',{class:'tab-btn'+(active?' active':'')+' scan-item', style, onclick:()=>{ state.activeCategory=c.id; state.boardPage=0; render(); }}, c.emoji+' '+c.name));
   });
   wrap.appendChild(tabs);
 
@@ -1790,7 +2029,7 @@ async function renderBoardView(){
         ? `background:var(--cat-${activeCat.color}); color:var(--cat-${activeCat.color}-ink);`
         : `background:${activeCat.themeColor}; color:${activeCat.themeInk};`;
       const hasRec = voiceIdx.has(normalizeWord(w.label));
-      const pictoBtn = el('button',{class:'picto-btn', style, onclick: async (ev)=>{
+      const pictoBtn = el('button',{class:'picto-btn scan-item', style, 'data-scan-label':w.label, onclick: async (ev)=>{
         markInteraction();
         state.sentence.push(w);
         mascotWordReaction(w.label);
@@ -1935,7 +2174,7 @@ async function renderPracticeMenu(){
   METHODS.forEach(m=>{
     grid.appendChild(el('div',{class:'method-card'},[
       el('span',{class:'m-emoji'}, m.emoji), el('h3',{}, m.title), el('p',{}, m.desc),
-      el('button',{class:'pill-btn solid', onclick:()=>{
+      el('button',{class:'pill-btn solid scan-item', 'data-scan-label':m.title, onclick:()=>{
         if(m.id==='practice-sequence') startSequencePractice();
         else if(m.id==='practice-say') startSayPractice();
         else if(m.id==='practice-puzzle') startPuzzlePractice();
@@ -2005,7 +2244,7 @@ function optionsGrid(target, options, locked, onChoose){
     let cls = 'practice-option';
     if(locked && isTarget) cls += ' correct';
     if(locked && !isTarget) cls += ' wrong';
-    optGrid.appendChild(el('button',{class:cls, disabled: locked, onclick: ()=>{ if(!locked) onChoose(isTarget); }},[
+    optGrid.appendChild(el('button',{class:cls+' scan-item', 'data-scan-label':o.label, disabled: locked, onclick: ()=>{ if(!locked) onChoose(isTarget); }},[
       el('span',{class:'emoji'}, o.emoji), el('span',{class:'label'}, o.label)
     ]));
   });
@@ -2159,17 +2398,29 @@ async function renderSayPractice(){
 async function startSequencePractice(){
   const p = await loadProfile(state.currentId);
   const pools = categorizedPools(p);
-  const allPatterns = [
-    ['personas','acciones'], ['personas','emociones'], ['acciones','necesidades'],
-    ['personas','acciones','necesidades'], ['personas','acciones','tema'], ['acciones','tema'],
-    ['personas','emociones','tema'], ['personas','acciones','emociones','tema'], ['personas','acciones','necesidades','tema']
-  ].filter(pat => pat.every(cat => pools[cat] && pools[cat].length>0));
-  if(allPatterns.length===0){ alert('Activá al menos dos categorías (por ejemplo Personas y Acciones) para practicar frases.'); return; }
+  const hasCat = c => pools[c] && pools[c].length>0;
+  const hasWord = w => !!findWordByLabel(p, w);
+  const pick = c => pools[c][Math.floor(Math.random()*pools[c].length)];
+  const fixed = w => findWordByLabel(p, w);
+  // Plantillas armadas a mano para que las frases tengan sentido real (en vez de mezclar categorías al azar).
+  // "cat" = una palabra cualquiera de esa categoría; "word" = una palabra fija (yo, querer, no, por favor).
+  const TEMPLATES = [
+    { len:2, need:['acciones'], build:()=>[fixed('yo'), pick('acciones')] },
+    { len:2, need:['emociones'], build:()=>[fixed('yo'), pick('emociones')] },
+    { len:2, need:['personas','emociones'], build:()=>[pick('personas'), pick('emociones')] },
+    { len:3, need:['necesidades'], build:()=>[fixed('yo'), fixed('querer'), pick('necesidades')] },
+    { len:3, need:['acciones'], build:()=>[fixed('yo'), fixed('querer'), pick('acciones')] },
+    { len:3, need:['tema'], build:()=>[fixed('yo'), fixed('querer'), pick('tema')] },
+    { len:4, need:['necesidades'], build:()=>[fixed('yo'), fixed('no'), fixed('querer'), pick('necesidades')] },
+    { len:4, need:['necesidades'], build:()=>[fixed('yo'), fixed('querer'), pick('necesidades'), fixed('por favor')] },
+  ];
+  const usable = TEMPLATES.filter(t => t.need.every(hasCat) && ['yo','querer','no','por favor'].every(hasWord));
+  if(usable.length===0){ alert('Activá al menos la categoría Necesidades o Acciones (y que Social esté activa, para "yo"/"querer") para practicar frases.'); return; }
   const targetLen = getSequenceLen(p);
-  let patterns = allPatterns.filter(pat=>pat.length===targetLen);
-  if(patterns.length===0) patterns = allPatterns.filter(pat=>pat.length===Math.min(...allPatterns.map(x=>x.length)));
-  const pattern = patterns[Math.floor(Math.random()*patterns.length)];
-  const model = pattern.map(cat=>{ const arr = pools[cat]; return arr[Math.floor(Math.random()*arr.length)]; });
+  let candidates = usable.filter(t=>t.len===targetLen);
+  if(candidates.length===0) candidates = usable.filter(t=>t.len===Math.min(...usable.map(t=>t.len)));
+  const template = candidates[Math.floor(Math.random()*candidates.length)];
+  const model = template.build();
   const shuffled = [...model].sort(()=>Math.random()-0.5);
   state.sequence = { model, pool:shuffled, built:[], done:false, mistakes:0 };
   state.practice.feedback = null;
@@ -2199,7 +2450,7 @@ async function renderSequencePractice(){
     const optGrid = el('div',{class:'seq-options'});
     pool.forEach(w=>{
       const used = built.includes(w);
-      optGrid.appendChild(el('button',{class:'seq-btn'+(used?' used':''), disabled:used, onclick: async ()=>{
+      optGrid.appendChild(el('button',{class:'seq-btn'+(used?' used':'')+' scan-item', 'data-scan-label':w.label, disabled:used, onclick: async ()=>{
         markInteraction();
         const expected = model[built.length];
         if(w.label===expected.label){
@@ -2276,10 +2527,10 @@ async function renderPuzzlePractice(){
   for(let i=0;i<slots.length;i++){
     const occupied = slots[i];
     const row = Math.floor(i/size), col = i%size;
-    let cls = 'puzzle-slot'+(occupied?'':' empty')+(wrongSlotIndex===i?' wrong-flash':'');
+    let cls = 'puzzle-slot'+(occupied?'':' empty scan-item')+(wrongSlotIndex===i?' wrong-flash':'');
     let inner = null;
-    if(occupied && svgUrl){
-      inner = el('div',{class:'piece-bg', style:`width:${cell}px;height:${cell}px;background-image:url('${svgUrl}');background-size:${FRAME_PX}px ${FRAME_PX}px;background-position:-${occupied.col*cell}px -${occupied.row*cell}px;`});
+    if(occupied){
+      inner = puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, occupied.row, occupied.col);
     }
     frame.appendChild(el('button',{class:cls, style:`width:${cell}px;height:${cell}px;`, onclick: async ()=>{
       if(done || slots[i]) return;
@@ -2325,8 +2576,8 @@ async function renderPuzzlePractice(){
     const trayEl = el('div',{class:'puzzle-tray'});
     tray.forEach(piece=>{
       const selected = selectedPieceId===piece.id;
-      const pieceBg = svgUrl ? el('div',{class:'piece-bg', style:`width:${cell}px;height:${cell}px;background-image:url('${svgUrl}');background-size:${FRAME_PX}px ${FRAME_PX}px;background-position:-${piece.col*cell}px -${piece.row*cell}px;`}) : el('span',{},'❓');
-      trayEl.appendChild(el('button',{class:'puzzle-piece'+(selected?' selected':''), style:`width:${cell}px;height:${cell}px;`, onclick:()=>{
+      const pieceBg = puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, piece.row, piece.col);
+      trayEl.appendChild(el('button',{class:'puzzle-piece'+(selected?' selected':'')+' scan-item', 'data-scan-label':word.label, style:`width:${cell}px;height:${cell}px;`, onclick:()=>{
         state.puzzle.selectedPieceId = selected ? null : piece.id;
         render();
       }}, pieceBg));
@@ -2403,12 +2654,12 @@ async function renderBalloonsPractice(){
   const field = el('div',{class:'balloon-field'});
   options.forEach((o,idx)=>{
     const isTarget = o.label===target.label;
-    let cls = 'balloon';
+    let cls = 'balloon scan-item';
     if(locked && isTarget) cls += ' correct';
     if(locked && !isTarget) cls += ' wrong';
     const color = BALLOON_COLORS[idx % BALLOON_COLORS.length];
     const style = `--balloon-color:${color}; animation-delay:${(idx*0.28).toFixed(2)}s; animation-duration:${(2.4+(idx%3)*0.35).toFixed(2)}s;`;
-    field.appendChild(el('button',{class:cls, style, disabled:locked, onclick: ()=>{ if(!locked) resolveBalloon(p, target, isTarget); }},[
+    field.appendChild(el('button',{class:cls, style, 'data-scan-label':o.label, disabled:locked, onclick: ()=>{ if(!locked) resolveBalloon(p, target, isTarget); }},[
       el('span',{class:'emoji'}, o.emoji), el('span',{class:'balloon-label'}, o.label)
     ]));
   });
@@ -2458,7 +2709,7 @@ async function renderMemotest(){
     const isUp = isMatched || m.flipped.includes(card.id);
     const face = !isUp ? el('span',{class:'mback'},'❓')
       : (card.kind==='pic' ? el('span',{class:'emoji'}, card.word.emoji) : el('span',{class:'mlabel'}, card.word.label));
-    grid.appendChild(el('button',{class:'memo-card'+(isUp?' up':'')+(isMatched?' matched':''), disabled: (m.locked || isUp || m.done), onclick: async (ev)=>{
+    grid.appendChild(el('button',{class:'memo-card'+(isUp?' up':'')+(isMatched?' matched':'')+' scan-item', disabled: (m.locked || isUp || m.done), onclick: async (ev)=>{
       if(m.locked || m.done || isUp || m.flipped.length>=2) return;
       markInteraction();
       m.flipped.push(card.id);
@@ -2590,7 +2841,7 @@ async function renderStoryPlay(){
     ]));
     const optGrid = el('div',{class:'story-options'});
     scene.options.forEach(opt=>{
-      optGrid.appendChild(el('button',{class:'story-option', onclick: async (ev)=>{
+      optGrid.appendChild(el('button',{class:'story-option scan-item', 'data-scan-label':opt.label, onclick: async (ev)=>{
         markInteraction();
         state.story.sentence.push(opt);
         hapticFeedback(p, 'good');
