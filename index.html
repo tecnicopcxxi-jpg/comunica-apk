@@ -1422,15 +1422,43 @@ function getPuzzleSize(p){
 function emojiToSvgUrl(emoji){
   try{
     if(!window.twemoji) return null;
-    // Se arma en un elemento invisible real y se usa el mismo twemoji.parse(nodo, ...) que ya
-    // funciona para todos los demás emojis de la app, en vez de reconstruir la URL "a mano"
-    // (eso fallaba para algunos emojis). Así se garantiza exactamente la misma URL que sí carga.
     const span = document.createElement('span');
     span.textContent = emoji;
     twemoji.parse(span, { base:'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/', folder:'72x72', ext:'.png' });
     const img = span.querySelector('img');
     return img ? img.getAttribute('src') : null;
   }catch(e){ return null; }
+}
+// Dibuja el emoji con la fuente del propio dispositivo en un <canvas> y devuelve una imagen local
+// (data:) — no depende de internet, así que nunca puede fallar por una red lenta o un CDN caído.
+// Se usa como red de seguridad para el rompecabezas cuando la imagen de Twemoji no carga.
+function emojiToCanvasDataUrl(emoji, sizePx){
+  try{
+    const canvas = document.createElement('canvas');
+    canvas.width = sizePx; canvas.height = sizePx;
+    const ctx = canvas.getContext('2d');
+    ctx.font = Math.round(sizePx*0.78)+'px "Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, sizePx/2, sizePx/2*1.06);
+    return canvas.toDataURL('image/png');
+  }catch(e){ return null; }
+}
+// Devuelve, lo antes posible, una imagen cuadrada utilizable para el rompecabezas: intenta Twemoji
+// (más colorida y consistente) y, si no carga en un segundo y medio, usa el dibujo por canvas como
+// respaldo — así la imagen de la pieza nunca queda en blanco, pase lo que pase con la red.
+function getPuzzleImage(emoji, sizePx){
+  return new Promise(resolve=>{
+    let done = false;
+    const finish = (url)=>{ if(!done){ done = true; resolve(url); } };
+    const fallback = ()=> finish(emojiToCanvasDataUrl(emoji, sizePx));
+    const twemojiUrl = emojiToSvgUrl(emoji);
+    if(!twemojiUrl){ fallback(); return; }
+    const probe = new Image();
+    probe.onload = ()=> finish(twemojiUrl);
+    probe.onerror = fallback;
+    probe.src = twemojiUrl;
+    setTimeout(fallback, 1500);
+  });
 }
 
 // ---------- Render raíz ----------
@@ -1494,12 +1522,12 @@ function applyEmojiIcons(root){
 function renderTopbar(){
   const currentName = state.currentId && state.profilesCache[state.currentId] ? state.profilesCache[state.currentId].name : null;
   const actions = [];
-  if(state.view!=='profiles') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='profiles'; setMascotMood(null,'idle'); render();}}, '🏠 Perfiles'));
-  if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid', onclick:()=>{state.view='board'; setMascotMood(null,'idle'); render();}}, '🗣️ Ir al tablero'));
-  if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='practice-menu'; setMascotMood(null,'idle'); render();}}, '🎓 Aprender a hablar'));
-  if(state.currentId && state.view!=='report') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='report'; render();}}, '🖨️ Reporte'));
-  if(state.currentId && state.view!=='achievements') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.view='achievements'; render();}}, '🏆 Logros'));
-  if(state.currentId && state.view!=='config') actions.push(el('button',{class:'pill-btn', onclick:()=>{state.editingId=state.currentId; state.view='config'; render();}}, '⚙️ Configurar'));
+  if(state.view!=='profiles') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Perfiles', onclick:()=>{state.view='profiles'; setMascotMood(null,'idle'); render();}}, '🏠 Perfiles'));
+  if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Ir al tablero', onclick:()=>{state.view='board'; setMascotMood(null,'idle'); render();}}, '🗣️ Ir al tablero'));
+  if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Aprender a hablar', onclick:()=>{state.view='practice-menu'; setMascotMood(null,'idle'); render();}}, '🎓 Aprender a hablar'));
+  if(state.currentId && state.view!=='report') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Reporte', onclick:()=>{state.view='report'; render();}}, '🖨️ Reporte'));
+  if(state.currentId && state.view!=='achievements') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Logros', onclick:()=>{state.view='achievements'; render();}}, '🏆 Logros'));
+  if(state.currentId && state.view!=='config') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Configurar', onclick:()=>{state.editingId=state.currentId; state.view='config'; render();}}, '⚙️ Configurar'));
   const quickBtn = state.currentId && state.view!=='quick' ? el('button',{class:'pill-btn warn', style:'font-weight:800;', onclick:()=>{state.view='quick'; setMascotMood(null,'idle'); render();}}, '🆘 Ayuda rápida') : null;
   return el('div',{class:'topbar no-print'},[
     el('div',{class:'brand'},[
@@ -2257,7 +2285,7 @@ async function renderListenPractice(){
   wrap.appendChild(el('div',{class:'practice-prompt'},[
     levelBadge(p, options.length+' opciones'),
     el('div',{class:'section-sub'},'👂 Escuchá la palabra y tocá la imagen correcta'),
-    el('button',{class:'say-btn', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar de nuevo'])
+    el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar de nuevo'])
   ]));
   wrap.appendChild(feedbackBanner(feedback));
   wrap.appendChild(optionsGrid(target, options, locked, isTarget=>resolvePracticeChoice(p, target, isTarget, 'practice-listen')));
@@ -2272,7 +2300,7 @@ async function renderReadPractice(){
     levelBadge(p, options.length+' opciones'),
     el('div',{class:'section-sub'},'👀 Leé la palabra y tocá la imagen correcta'),
     el('div',{class:'big-word'}, target.label),
-    el('button',{class:'say-btn', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar como pista'])
+    el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar como pista'])
   ]));
   wrap.appendChild(feedbackBanner(feedback));
   wrap.appendChild(optionsGrid(target, options, locked, isTarget=>resolvePracticeChoice(p, target, isTarget, 'practice-read')));
@@ -2302,7 +2330,7 @@ async function renderSayPractice(){
     el('div',{class:'section-sub'},'🗣️ Mirá, escuchá y repetí la palabra en voz alta'),
     el('div',{class:'say-target'},[
       el('span',{class:'say-emoji'}, target.emoji), el('div',{class:'big-word'}, target.label),
-      el('button',{class:'say-btn', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '),'Escuchar de nuevo'])
+      el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '),'Escuchar de nuevo'])
     ])
   ]));
   wrap.appendChild(feedbackBanner(feedback));
@@ -2435,7 +2463,7 @@ async function renderSequencePractice(){
   wrap.appendChild(el('div',{class:'practice-prompt'},[
     levelBadge(p, model.length+' palabras'),
     el('div',{class:'section-sub'},'🧩 Escuchá la frase modelo y reconstruila tocando las imágenes en orden'),
-    el('button',{class:'say-btn', onclick:()=>speakSentence(p, model)},[el('span',{},'🔊 '),'Escuchar la frase'])
+    el('button',{class:'say-btn scan-item', onclick:()=>speakSentence(p, model)},[el('span',{},'🔊 '),'Escuchar la frase'])
   ]));
   const modelStrip = el('div',{class:'model-strip'});
   model.forEach((w,i)=> modelStrip.appendChild(el('div',{class:'model-chip'},[ el('span',{}, '❓'), el('span',{}, String(i+1)) ])));
@@ -2480,8 +2508,8 @@ async function renderSequencePractice(){
   }else{
     wrap.appendChild(el('div',{class:'feedback-banner good'}, '¡Frase completa! 🎉'));
     wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center; margin-top:6px;'},[
-      el('button',{class:'round-action speak', onclick: ()=> speakSentence(p, model)}, '🔊 Escuchar de nuevo'),
-      el('button',{class:'round-action back', onclick: startSequencePractice}, '➡️ Otra frase')
+      el('button',{class:'round-action speak scan-item', onclick: ()=> speakSentence(p, model)}, '🔊 Escuchar de nuevo'),
+      el('button',{class:'round-action back scan-item', onclick: startSequencePractice}, '➡️ Otra frase')
     ]));
   }
   wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Trabaja la sintaxis. Con dificultad automática, las frases empiezan de 2 palabras y crecen hasta 4 si el niño no se equivoca.'));
@@ -2497,7 +2525,10 @@ async function startPuzzlePractice(resetSession){
   const sessionCount = (resetSession===false && state.puzzle) ? (state.puzzle.sessionCount||0) : 0;
   const word = pool[Math.floor(Math.random()*pool.length)];
   const size = getPuzzleSize(p);
-  const svgUrl = emojiToSvgUrl(word.emoji);
+  state.puzzle = { word, size, svgUrl:null, tray:[], slots:[], selectedPieceId:null, wrongSlotIndex:null, done:false, sessionCount, autoTimeoutId:null, loading:true };
+  state.practice.feedback = null;
+  state.view = 'practice-puzzle'; render();
+  const svgUrl = await getPuzzleImage(word.emoji, 240);
   const pieces = [];
   for(let r=0;r<size;r++) for(let c=0;c<size;c++) pieces.push({ id:r*size+c, row:r, col:c });
   const tray = [...pieces].sort(()=>Math.random()-0.5);
@@ -2509,16 +2540,20 @@ async function startPuzzlePractice(resetSession){
 }
 async function renderPuzzlePractice(){
   const p = await loadProfile(state.currentId);
-  const { word, size, svgUrl, tray, slots, selectedPieceId, wrongSlotIndex, done, sessionCount } = state.puzzle;
+  const { word, size, svgUrl, tray, slots, selectedPieceId, wrongSlotIndex, done, sessionCount, loading } = state.puzzle;
   const FRAME_PX = 240;
   const cell = FRAME_PX / size;
   const wrap = el('div',{class:'practice-wrap'});
+  if(loading){
+    wrap.appendChild(el('div',{class:'practice-prompt'},[ el('div',{class:'section-sub'},'🖼️ Preparando el rompecabezas…') ]));
+    return wrap;
+  }
 
   wrap.appendChild(el('div',{class:'practice-prompt'},[
     levelBadge(p, size+'×'+size+' piezas'),
     el('div',{class:'section-sub'},'🖼️ Tocá una pieza y después el lugar del dibujo donde va'),
     el('div',{class:'muted', style:'font-size:13px; margin:2px 0 10px;'}, `Rompecabezas resueltos en esta sesión: ${sessionCount}`),
-    el('button',{class:'say-btn', onclick:()=>speakItem(p, word)},[el('span',{},'👂 '),'Escuchar una pista'])
+    el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, word)},[el('span',{},'👂 '),'Escuchar una pista'])
   ]));
   wrap.appendChild(feedbackBanner(state.practice.feedback));
 
@@ -2584,15 +2619,15 @@ async function renderPuzzlePractice(){
     });
     puzzleWrap.appendChild(trayEl);
     puzzleWrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center; margin-top:6px;'},[
-      el('button',{class:'round-action back', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
+      el('button',{class:'round-action back scan-item', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
     ]));
   }else{
     puzzleWrap.appendChild(el('div',{class:'feedback-banner good'}, `¡Armaste el dibujo! Es: ${word.label} 🎉`));
     puzzleWrap.appendChild(el('div',{class:'muted', style:'font-size:13px; margin-bottom:8px;'}, 'El próximo rompecabezas empieza solo en unos segundos…'));
     puzzleWrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
-      el('button',{class:'round-action speak', onclick:()=>speakItem(p, word)}, '🔊 Escuchar de nuevo'),
-      el('button',{class:'round-action back', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); startPuzzlePractice(false); }}, '➡️ Ahora'),
-      el('button',{class:'round-action back', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
+      el('button',{class:'round-action speak scan-item', onclick:()=>speakItem(p, word)}, '🔊 Escuchar de nuevo'),
+      el('button',{class:'round-action back scan-item', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); startPuzzlePractice(false); }}, '➡️ Ahora'),
+      el('button',{class:'round-action back scan-item', onclick:()=>{ if(state.puzzle.autoTimeoutId) clearTimeout(state.puzzle.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
     ]));
   }
   wrap.appendChild(puzzleWrap);
@@ -2647,7 +2682,7 @@ async function renderBalloonsPractice(){
     levelBadge(p, options.length+' globos'),
     el('div',{class:'section-sub'},'🎈 Escuchá la palabra y reventá el globo correcto'),
     el('div',{class:'muted', style:'font-size:13px; margin:2px 0 10px;'}, `Globos reventados en esta sesión: ${sessionCount}`),
-    el('button',{class:'say-btn', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar de nuevo'])
+    el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '), 'Escuchar de nuevo'])
   ]));
   wrap.appendChild(feedbackBanner(feedback));
 
@@ -2666,7 +2701,7 @@ async function renderBalloonsPractice(){
   wrap.appendChild(field);
 
   wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
-    el('button',{class:'round-action back', onclick:()=>{ if(state.balloonGame && state.balloonGame.autoTimeoutId) clearTimeout(state.balloonGame.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
+    el('button',{class:'round-action back scan-item', onclick:()=>{ if(state.balloonGame && state.balloonGame.autoTimeoutId) clearTimeout(state.balloonGame.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
   ]));
 
   wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Trabaja comprensión auditiva de forma divertida. La cantidad de globos sube sola con la dificultad automática, igual que en "Escuchar y elegir".'));
@@ -2750,12 +2785,12 @@ async function renderMemotest(){
     wrap.appendChild(el('div',{class:'feedback-banner good'}, '¡Encontraste todas las parejas! 🎉'));
     wrap.appendChild(el('div',{class:'muted', style:'font-size:13px; margin-bottom:8px;'}, 'El próximo memotest empieza solo en unos segundos…'));
     wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
-      el('button',{class:'round-action back', onclick:()=>{ if(m.autoTimeoutId) clearTimeout(m.autoTimeoutId); startMemotest(false); }}, '➡️ Ahora'),
-      el('button',{class:'round-action back', onclick:()=>{ if(m.autoTimeoutId) clearTimeout(m.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
+      el('button',{class:'round-action back scan-item', onclick:()=>{ if(m.autoTimeoutId) clearTimeout(m.autoTimeoutId); startMemotest(false); }}, '➡️ Ahora'),
+      el('button',{class:'round-action back scan-item', onclick:()=>{ if(m.autoTimeoutId) clearTimeout(m.autoTimeoutId); state.view='practice-menu'; render(); }}, '🏁 Terminar sesión')
     ]));
   }else{
     wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
-      el('button',{class:'round-action back', onclick:()=>{ state.view='practice-menu'; render(); }}, '🏁 Terminar')
+      el('button',{class:'round-action back scan-item', onclick:()=>{ state.view='practice-menu'; render(); }}, '🏁 Terminar')
     ]));
   }
   wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Trabaja memoria de trabajo y la asociación entre la imagen y la palabra escrita. Cada carta que se da vuelta dice su palabra en voz alta. Con dificultad automática, suma parejas a medida que acierta.'));
@@ -2815,7 +2850,7 @@ async function renderStoryMenu(){
   STORIES.forEach(s=>{
     grid.appendChild(el('div',{class:'story-card'},[
       el('span',{class:'s-emoji'}, s.emoji), el('h3',{}, s.title), el('p',{}, s.desc),
-      el('button',{class:'pill-btn solid', onclick:()=>startStory(s.id)}, 'Comenzar')
+      el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Comenzar '+s.title, onclick:()=>startStory(s.id)}, 'Comenzar')
     ]));
   });
   wrap.appendChild(grid);
@@ -2861,9 +2896,9 @@ async function renderStoryPlay(){
       el('div',{class:'s-text'}, story.ending)
     ]));
     wrap.appendChild(el('div',{class:'sentence-actions', style:'justify-content:center;'},[
-      el('button',{class:'round-action speak', onclick:()=>speakSentence(p, sentence)}, '🔊 Escuchar toda la historia'),
-      el('button',{class:'round-action back', onclick:()=>startStory(story.id)}, '🔁 De nuevo'),
-      el('button',{class:'round-action back', onclick:()=>{state.view='story-menu'; render();}}, '📖 Otra historia')
+      el('button',{class:'round-action speak scan-item', onclick:()=>speakSentence(p, sentence)}, '🔊 Escuchar toda la historia'),
+      el('button',{class:'round-action back scan-item', onclick:()=>startStory(story.id)}, '🔁 De nuevo'),
+      el('button',{class:'round-action back scan-item', onclick:()=>{state.view='story-menu'; render();}}, '📖 Otra historia')
     ]));
   }
   wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Cada elección construye una frase con sentido dentro de una situación real, para practicar comunicación funcional más allá de palabras sueltas.'));
