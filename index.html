@@ -283,6 +283,26 @@
   @keyframes mascot-bob{ 0%{transform:translateY(0) rotate(-6deg) scale(1);} 100%{transform:translateY(-16px) rotate(6deg) scale(1.06);} }
   @keyframes mascot-poke{ 0%{transform:scale(1) rotate(0);} 25%{transform:scale(1.35) rotate(-14deg);} 50%{transform:scale(.88) rotate(10deg);} 75%{transform:scale(1.15) rotate(-6deg);} 100%{transform:scale(1) rotate(0);} }
   @keyframes mascot-flourish{ 0%{transform:translateY(0) rotate(0) scale(1);} 20%{transform:translateY(-22px) rotate(-12deg) scale(1.1);} 40%{transform:translateY(0) rotate(10deg) scale(.95);} 60%{transform:translateY(-10px) rotate(-8deg) scale(1.05);} 80%{transform:translateY(0) rotate(6deg) scale(1);} 100%{transform:translateY(0) rotate(0) scale(1);} }
+  .mascot-avatar{ touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
+  .mascot-avatar:hover{ filter:brightness(1.08); }
+  .mascot-widget.mascot-dragging{ transition:none; z-index:70; }
+  .mascot-widget.mascot-dragging .mascot-avatar{ cursor:grabbing; animation:none; transform:scale(1.14) rotate(-5deg);
+    box-shadow:0 20px 36px -8px rgba(43,38,64,.55), 0 0 0 7px rgba(255,255,255,.75); }
+  .mascot-avatar.mascot-hover{ animation:mascot-hover-wave .6s ease-in-out infinite alternate; }
+  .mascot-avatar.mascot-react-jump{ animation:mascot-react-jump .85s cubic-bezier(.3,1.6,.5,1); }
+  .mascot-avatar.mascot-react-spin{ animation:mascot-react-spin .9s ease-in-out; }
+  .mascot-avatar.mascot-react-wiggle{ animation:mascot-react-wiggle .85s ease-in-out; }
+  .mascot-avatar.mascot-react-dance{ animation:mascot-react-dance 1s ease-in-out; }
+  @keyframes mascot-hover-wave{ from{transform:scale(1.1) rotate(-9deg);} to{transform:scale(1.15) rotate(9deg);} }
+  @keyframes mascot-react-jump{ 0%{transform:translateY(0) scale(1);} 35%{transform:translateY(-44px) scale(1.2,.9);} 55%{transform:translateY(0) scale(.9,1.12);} 75%{transform:translateY(-14px) scale(1.05);} 100%{transform:translateY(0) scale(1);} }
+  @keyframes mascot-react-spin{ 0%{transform:rotate(0) scale(1);} 50%{transform:rotate(200deg) scale(1.25);} 100%{transform:rotate(360deg) scale(1);} }
+  @keyframes mascot-react-wiggle{ 0%,100%{transform:rotate(0);} 15%{transform:rotate(-16deg) scale(1.1);} 35%{transform:rotate(14deg);} 55%{transform:rotate(-10deg);} 75%{transform:rotate(8deg);} }
+  @keyframes mascot-react-dance{ 0%{transform:translate(0,0) rotate(0);} 20%{transform:translate(-14px,-12px) rotate(-12deg) scale(1.1);} 40%{transform:translate(14px,0) rotate(12deg);} 60%{transform:translate(-12px,-16px) rotate(-10deg) scale(1.12);} 80%{transform:translate(10px,0) rotate(8deg);} 100%{transform:translate(0,0) rotate(0);} }
+  @keyframes mascot-react-calm{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+  body[data-intensity="calmado"] .mascot-avatar[class*="mascot-react-"]{ animation:mascot-react-calm .6s ease; }
+  body[data-intensity="calmado"] .mascot-avatar.mascot-hover{ animation:none; transform:scale(1.05); }
+  .mascot-heart{ position:fixed; pointer-events:none; z-index:65; font-size:24px; animation:mascot-heart-rise 1.3s ease-out forwards; opacity:0; }
+  @keyframes mascot-heart-rise{ 0%{transform:translate(0,0) scale(.5); opacity:0;} 15%{opacity:1;} 100%{transform:translate(var(--dx),-100px) scale(1.25); opacity:0;} }
   .mascot-reaction-pop{ position:absolute; right:6px; top:-8px; font-size:30px; pointer-events:none;
     animation:mascot-reaction-rise .9s ease forwards;}
   @keyframes mascot-reaction-rise{ 0%{transform:translateY(0) scale(.6); opacity:0;} 25%{opacity:1; transform:translateY(-10px) scale(1.15);} 100%{transform:translateY(-46px) scale(1); opacity:0;} }
@@ -688,11 +708,21 @@ function renderMascot(p, mood){
   if(!state.mascotPhrase){
     state.mascotPhrase = pickMascotPhrase(p, mood);
   }
-  const posStyle = state.mascotPos ? `left:${state.mascotPos.left}px; top:${state.mascotPos.top}px; right:auto; bottom:auto;` : '';
-  return el('div',{class:'mascot-widget', style:posStyle},[
-    el('button',{class:'mascot-avatar'+(state.mascotPoke?' mascot-poke':''), style:`background:${m.color};`, title:m.name, onclick:()=>pokeMascot(p)}, m.emoji),
-    el('div',{class:'mascot-bubble'}, state.mascotPhrase)
-  ]);
+  let posStyle = '';
+  if(state.mascotPos){
+    // Se limita a la pantalla actual (por si se arrastró en una ventana más grande o se rotó el celular).
+    const left = Math.max(0, Math.min(state.mascotPos.left, Math.max(0, window.innerWidth-120)));
+    const top = Math.max(0, Math.min(state.mascotPos.top, Math.max(0, window.innerHeight-120)));
+    posStyle = `left:${left}px; top:${top}px; right:auto; bottom:auto;`;
+  }
+  const widget = el('div',{class:'mascot-widget', style:posStyle});
+  const avatar = el('button',{class:'mascot-avatar'+(state.mascotPoke?' mascot-poke':''), style:`background:${m.color};`,
+    title:m.name+' — tocame, o arrastrame por la pantalla',
+    onclick:()=>{ if(Date.now()<mascotSuppressClickUntil) return; pokeMascot(p); }}, m.emoji);
+  widget.appendChild(avatar);
+  widget.appendChild(el('div',{class:'mascot-bubble'}, state.mascotPhrase));
+  attachMascotInteractions(avatar, widget, p);
+  return widget;
 }
 // Fija el ánimo de la mascota y elige una frase para su burbuja. Si opts.speak es true, la dice en voz alta;
 // con opts.delayMs, espera ese tiempo antes de hablar (para no pisar el audio de la palabra/juego que ya está sonando).
@@ -728,13 +758,145 @@ function roamMascot(){
   widget.style.right = 'auto';
   widget.style.bottom = 'auto';
 }
-// Al tocar la mascota: reacciona con una animación y dice algo con voz, para que se sienta interactiva.
+// ---------- Interacción directa con la mascota (clic, toque, mouse encima, arrastrar) ----------
+let mascotSuppressClickUntil = 0;
+let mascotLastTouchAt = 0;
+let mascotLastPokePhrase = '';
+const MASCOT_POKE_PHRASES = ['¡Jajaja, me hiciste cosquillas!', '¡Hola! ¡Acá estoy!', '¡Uy, qué lindo toque!', '¡Otra vez, otra vez!', '¡Vamos a jugar!', '¡Eso me encanta!', '¡Boing!', '¡Qué divertido!'];
+const MASCOT_POKE_PHRASES_NAME = ['¡Jajaja, {name}, me hiciste cosquillas!', '¡Hola, {name}! ¡Acá estoy!', '¡Qué divertido, {name}!', '¡Me encanta jugar con vos, {name}!', '¡Otra vez, {name}, otra vez!'];
+const MASCOT_REACTION_KINDS = ['jump','spin','wiggle','dance'];
+const MASCOT_HEARTS = ['💜','❤️','⭐','✨','💖'];
+// Cambia el texto de la burbuja directamente (sin redibujar toda la app) y, si se pide, lo dice en voz alta.
+function mascotSay(p, phrase, opts){
+  state.mascotPhrase = phrase;
+  const b = document.querySelector('.mascot-bubble');
+  if(b) b.textContent = phrase;
+  if(opts && opts.speak && p) speak(phrase, p.voiceRate, p.voicePitch);
+}
+// Dispara una animación de reacción distinta sobre el avatar (salto, giro, meneo, baile).
+function mascotReact(kind){
+  const a = document.querySelector('.mascot-avatar');
+  if(!a) return;
+  MASCOT_REACTION_KINDS.forEach(k=>a.classList.remove('mascot-react-'+k));
+  a.classList.remove('mascot-flourish','mascot-hover','mascot-poke');
+  void a.offsetWidth; // reinicia la animación aunque se repita la misma
+  a.classList.add('mascot-react-'+kind);
+  setTimeout(()=>{ try{ a.classList.remove('mascot-react-'+kind); }catch(e){} }, 1050);
+}
+// Corazones y estrellitas que salen volando desde la mascota.
+function mascotHearts(p, count){
+  if(!p || p.sensoryEffects===false) return;
+  const a = document.querySelector('.mascot-avatar');
+  if(!a) return;
+  try{
+    const r = a.getBoundingClientRect();
+    for(let i=0;i<count;i++){
+      const s = document.createElement('span');
+      s.className = 'mascot-heart';
+      s.textContent = MASCOT_HEARTS[Math.floor(Math.random()*MASCOT_HEARTS.length)];
+      s.style.left = (r.left + r.width/2 + (Math.random()*50-25))+'px';
+      s.style.top = (r.top + r.height*0.2)+'px';
+      s.style.setProperty('--dx', (Math.random()*90-45)+'px');
+      s.style.animationDelay = (i*0.07)+'s';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(), 1700);
+    }
+  }catch(e){}
+}
+// Un "boing" sintetizado (sin archivos de audio) al tocarla.
+function mascotBoing(p){
+  if(!p || p.sensoryEffects===false || p.themeSounds===false) return;
+  try{
+    const c = getAudioCtx(); if(!c) return;
+    const t = c.currentTime;
+    fxTone(c, t, 260, 0.18, 'sine', 0.22, 640);
+    fxTone(c, t+0.15, 520, 0.14, 'triangle', 0.16, 900);
+  }catch(e){}
+}
+// Al hacer clic/tocar la mascota: reacciona con animación distinta cada vez, sonido, corazones, vibración y una
+// frase hablada (a veces con el nombre del niño/a). Cada 10 toques hace un festejo especial.
 function pokeMascot(p){
   markInteraction();
-  state.mascotPoke = true;
-  setMascotMood(p, state.mascotMood, {speak:true});
-  render();
-  setTimeout(()=>{ state.mascotPoke=false; render(); }, 700);
+  mascotLastTouchAt = Date.now();
+  state.mascotPokeCount = (state.mascotPokeCount||0) + 1;
+  const n = state.mascotPokeCount;
+  const nm = p ? firstName(p.name) : '';
+  let phrase;
+  if(n % 10 === 0){
+    phrase = nm ? '¡Wow, '+nm+'! ¡Ya jugamos '+n+' veces conmigo! 🎉' : '¡Wow! ¡Ya jugamos '+n+' veces conmigo! 🎉';
+  }else{
+    let pool = MASCOT_POKE_PHRASES.concat(nm ? MASCOT_POKE_PHRASES_NAME.map(t=>t.replace('{name}', nm)) : []);
+    pool = pool.filter(x=>x!==mascotLastPokePhrase);
+    phrase = pool[Math.floor(Math.random()*pool.length)];
+  }
+  mascotLastPokePhrase = phrase;
+  mascotSay(p, phrase, {speak:true});
+  mascotReact(MASCOT_REACTION_KINDS[n % MASCOT_REACTION_KINDS.length]);
+  mascotHearts(p, n % 10 === 0 ? 14 : 6);
+  mascotBoing(p);
+  hapticFeedback(p, 'good');
+  if(n % 10 === 0) bigBurst(p);
+}
+// Arrastrar con el mouse o el dedo + reacción al pasar el mouse por encima.
+function attachMascotInteractions(avatar, widget, p){
+  let dragging = false, moved = false, startX = 0, startY = 0, startLeft = 0, startTop = 0, pid = null;
+  avatar.addEventListener('pointerdown', (e)=>{
+    if(e.button!==undefined && e.button!==0) return;
+    const r = widget.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY; startLeft = r.left; startTop = r.top;
+    dragging = true; moved = false; pid = e.pointerId;
+    try{ avatar.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  avatar.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX-startX, dy = e.clientY-startY;
+    if(!moved){
+      if(Math.hypot(dx,dy) < 8) return;
+      moved = true;
+      state.mascotDragging = true;
+      widget.classList.add('mascot-dragging');
+      avatar.classList.remove('mascot-hover','mascot-flourish');
+      mascotSay(p, '¡Wiii! ¡Llevame a pasear!');
+    }
+    const left = Math.max(0, Math.min(startLeft+dx, window.innerWidth - widget.offsetWidth));
+    const top = Math.max(0, Math.min(startTop+dy, window.innerHeight - widget.offsetHeight));
+    widget.style.left = left+'px'; widget.style.top = top+'px';
+    widget.style.right = 'auto'; widget.style.bottom = 'auto';
+  });
+  const end = ()=>{
+    if(!dragging) return;
+    dragging = false;
+    try{ avatar.releasePointerCapture(pid); }catch(_){}
+    if(moved){
+      state.mascotPos = { left: parseInt(widget.style.left,10)||0, top: parseInt(widget.style.top,10)||0 };
+      state.mascotDragging = false;
+      widget.classList.remove('mascot-dragging');
+      mascotSuppressClickUntil = Date.now()+300; // para que soltarla no cuente además como un toque
+      mascotLastTouchAt = Date.now();
+      const nm = p ? firstName(p.name) : '';
+      mascotSay(p, nm ? '¡Qué lindo paseo, '+nm+'! 🎈' : '¡Qué lindo paseo! 🎈', {speak:true});
+      mascotReact('jump');
+      mascotHearts(p, 4);
+      mascotBoing(p);
+    }
+  };
+  avatar.addEventListener('pointerup', end);
+  avatar.addEventListener('pointercancel', end);
+  // Con el mouse encima: se alegra y saluda (en pantallas táctiles no hay "encima", así que no aplica).
+  avatar.addEventListener('pointerenter', (e)=>{
+    if(e.pointerType!=='mouse' || dragging) return;
+    mascotLastTouchAt = Date.now();
+    avatar.classList.remove('mascot-flourish');
+    avatar.classList.add('mascot-hover');
+    const b = widget.querySelector('.mascot-bubble');
+    if(b) b.textContent = '¡Hola! Hacé clic en mí 👆';
+  });
+  avatar.addEventListener('pointerleave', (e)=>{
+    if(e.pointerType!=='mouse') return;
+    avatar.classList.remove('mascot-hover');
+    const b = widget.querySelector('.mascot-bubble');
+    if(b && state.mascotPhrase) b.textContent = state.mascotPhrase;
+  });
 }
 // Reacción visual de la mascota a una palabra puntual del tablero (una burbuja con el emoji que aparece y sube).
 function mascotWordReaction(label){
@@ -949,6 +1111,8 @@ let state = {
   mascotMood:'idle',
   mascotPhrase:null,
   mascotPoke:false,
+  mascotPokeCount:0,
+  mascotDragging:false,
   mascotPos:null
 };
 
@@ -1156,6 +1320,7 @@ document.addEventListener('click', (e)=>{
   const p = state.currentId ? state.profilesCache[state.currentId] : null;
   if(!p || !p.scanningEnabled) return;
   if(e.target.closest('.scan-select-btn')) return; // ya lo maneja su propio onclick
+  if(e.target.closest('.mascot-widget')) return; // jugar con la mascota no debe seleccionar botones
   if(e.target.closest('.scan-item')) return; // un toque directo sobre el botón ya lo activa solo
   selectScan();
 });
@@ -1389,76 +1554,25 @@ function barChartSVG(items){
 // Construye el "recorte" visual de una pieza del rompecabezas. Usa una etiqueta <img> real
 // (igual que el resto de la app, que sí carga siempre) en vez de solo un fondo CSS, y si esa
 // imagen puntual llegara a fallar, muestra el emoji directo como respaldo — nunca queda en blanco.
-function puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, row, col){
+// Arma la "ventana" de una pieza del rompecabezas: un emoji grande (del tamaño del rompecabezas
+// completo) posicionado de forma que solo se vea el pedacito que corresponde a esa pieza, recortado
+// por el "overflow:hidden" del contenedor. Usa applyEmojiIcons (el mismo mecanismo ya comprobado que
+// muestra todos los demás emojis de la app a color) en lugar de depender de una URL armada a mano o de
+// un <canvas>, que podían fallar en algunos dispositivos — esto queda resuelto al instante, sin esperas.
+function puzzlePieceVisual(word, cell, FRAME_PX, row, col){
   const box = document.createElement('div');
   box.className = 'piece-bg';
   box.style.cssText = `width:${cell}px;height:${cell}px;position:relative;overflow:hidden;`;
-  const showFallback = ()=>{
-    box.innerHTML = '';
-    const span = document.createElement('span');
-    span.textContent = word.emoji;
-    span.style.cssText = `display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:${Math.round(cell*0.55)}px;`;
-    box.appendChild(span);
-    applyEmojiIcons(box);
-  };
-  if(svgUrl){
-    const img = document.createElement('img');
-    img.alt = '';
-    img.style.cssText = `position:absolute; left:${-col*cell}px; top:${-row*cell}px; width:${FRAME_PX}px; height:${FRAME_PX}px; max-width:none;`;
-    img.onerror = showFallback;
-    img.src = svgUrl;
-    box.appendChild(img);
-  }else{
-    showFallback();
-  }
+  const span = document.createElement('span');
+  span.textContent = word.emoji;
+  span.style.cssText = `position:absolute; left:${-col*cell}px; top:${-row*cell}px; font-size:${FRAME_PX}px; line-height:1; display:block;`;
+  box.appendChild(span);
+  applyEmojiIcons(box);
   return box;
 }
 function getPuzzleSize(p){
   if(!p.autoDifficulty) return Math.max(2, Math.min(3, p.manualPuzzleSize||2));
   return getOptionsCount(p) >= 4 ? 3 : 2;
-}
-// Devuelve la URL de imagen para un emoji, usando el mismo motor (Twemoji) que ya se usa en toda la app
-// para que sea exactamente la misma URL que funciona en los demás lugares (evita imágenes rotas).
-function emojiToSvgUrl(emoji){
-  try{
-    if(!window.twemoji) return null;
-    const span = document.createElement('span');
-    span.textContent = emoji;
-    twemoji.parse(span, { base:'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/', folder:'72x72', ext:'.png' });
-    const img = span.querySelector('img');
-    return img ? img.getAttribute('src') : null;
-  }catch(e){ return null; }
-}
-// Dibuja el emoji con la fuente del propio dispositivo en un <canvas> y devuelve una imagen local
-// (data:) — no depende de internet, así que nunca puede fallar por una red lenta o un CDN caído.
-// Se usa como red de seguridad para el rompecabezas cuando la imagen de Twemoji no carga.
-function emojiToCanvasDataUrl(emoji, sizePx){
-  try{
-    const canvas = document.createElement('canvas');
-    canvas.width = sizePx; canvas.height = sizePx;
-    const ctx = canvas.getContext('2d');
-    ctx.font = Math.round(sizePx*0.78)+'px "Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, sizePx/2, sizePx/2*1.06);
-    return canvas.toDataURL('image/png');
-  }catch(e){ return null; }
-}
-// Devuelve, lo antes posible, una imagen cuadrada utilizable para el rompecabezas: intenta Twemoji
-// (más colorida y consistente) y, si no carga en un segundo y medio, usa el dibujo por canvas como
-// respaldo — así la imagen de la pieza nunca queda en blanco, pase lo que pase con la red.
-function getPuzzleImage(emoji, sizePx){
-  return new Promise(resolve=>{
-    let done = false;
-    const finish = (url)=>{ if(!done){ done = true; resolve(url); } };
-    const fallback = ()=> finish(emojiToCanvasDataUrl(emoji, sizePx));
-    const twemojiUrl = emojiToSvgUrl(emoji);
-    if(!twemojiUrl){ fallback(); return; }
-    const probe = new Image();
-    probe.onload = ()=> finish(twemojiUrl);
-    probe.onerror = fallback;
-    probe.src = twemojiUrl;
-    setTimeout(fallback, 1500);
-  });
 }
 
 // ---------- Render raíz ----------
@@ -2525,14 +2639,10 @@ async function startPuzzlePractice(resetSession){
   const sessionCount = (resetSession===false && state.puzzle) ? (state.puzzle.sessionCount||0) : 0;
   const word = pool[Math.floor(Math.random()*pool.length)];
   const size = getPuzzleSize(p);
-  state.puzzle = { word, size, svgUrl:null, tray:[], slots:[], selectedPieceId:null, wrongSlotIndex:null, done:false, sessionCount, autoTimeoutId:null, loading:true };
-  state.practice.feedback = null;
-  state.view = 'practice-puzzle'; render();
-  const svgUrl = await getPuzzleImage(word.emoji, 240);
   const pieces = [];
   for(let r=0;r<size;r++) for(let c=0;c<size;c++) pieces.push({ id:r*size+c, row:r, col:c });
   const tray = [...pieces].sort(()=>Math.random()-0.5);
-  state.puzzle = { word, size, svgUrl, tray, slots: new Array(size*size).fill(null), selectedPieceId:null, wrongSlotIndex:null, done:false, sessionCount, autoTimeoutId:null };
+  state.puzzle = { word, size, tray, slots: new Array(size*size).fill(null), selectedPieceId:null, wrongSlotIndex:null, done:false, sessionCount, autoTimeoutId:null };
   state.practice.feedback = null;
   setMascotMood(null,'idle');
   state.view = 'practice-puzzle';
@@ -2540,14 +2650,10 @@ async function startPuzzlePractice(resetSession){
 }
 async function renderPuzzlePractice(){
   const p = await loadProfile(state.currentId);
-  const { word, size, svgUrl, tray, slots, selectedPieceId, wrongSlotIndex, done, sessionCount, loading } = state.puzzle;
+  const { word, size, tray, slots, selectedPieceId, wrongSlotIndex, done, sessionCount } = state.puzzle;
   const FRAME_PX = 240;
   const cell = FRAME_PX / size;
   const wrap = el('div',{class:'practice-wrap'});
-  if(loading){
-    wrap.appendChild(el('div',{class:'practice-prompt'},[ el('div',{class:'section-sub'},'🖼️ Preparando el rompecabezas…') ]));
-    return wrap;
-  }
 
   wrap.appendChild(el('div',{class:'practice-prompt'},[
     levelBadge(p, size+'×'+size+' piezas'),
@@ -2565,7 +2671,7 @@ async function renderPuzzlePractice(){
     let cls = 'puzzle-slot'+(occupied?'':' empty scan-item')+(wrongSlotIndex===i?' wrong-flash':'');
     let inner = null;
     if(occupied){
-      inner = puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, occupied.row, occupied.col);
+      inner = puzzlePieceVisual(word, cell, FRAME_PX, occupied.row, occupied.col);
     }
     frame.appendChild(el('button',{class:cls, style:`width:${cell}px;height:${cell}px;`, onclick: async ()=>{
       if(done || slots[i]) return;
@@ -2611,7 +2717,7 @@ async function renderPuzzlePractice(){
     const trayEl = el('div',{class:'puzzle-tray'});
     tray.forEach(piece=>{
       const selected = selectedPieceId===piece.id;
-      const pieceBg = puzzlePieceVisual(svgUrl, word, cell, FRAME_PX, piece.row, piece.col);
+      const pieceBg = puzzlePieceVisual(word, cell, FRAME_PX, piece.row, piece.col);
       trayEl.appendChild(el('button',{class:'puzzle-piece'+(selected?' selected':'')+' scan-item', 'data-scan-label':word.label, style:`width:${cell}px;height:${cell}px;`, onclick:()=>{
         state.puzzle.selectedPieceId = selected ? null : piece.id;
         render();
@@ -2928,7 +3034,8 @@ if('serviceWorker' in navigator){
     const avatar = document.querySelector('.mascot-avatar');
     const calm = !!(p && p.sensoryEffects===false);
     const alto = !!(p && !calm && p.sensoryIntensity==='alto');
-    if(avatar && !calm){
+    const busyWithMascot = state.mascotDragging || (Date.now()-mascotLastTouchAt) < 8000;
+    if(avatar && !calm && !busyWithMascot){
       if(!avatar.classList.contains('mascot-poke')){
         avatar.classList.add('mascot-flourish');
         setTimeout(()=>avatar.classList.remove('mascot-flourish'), 900);
