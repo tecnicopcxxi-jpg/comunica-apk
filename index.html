@@ -40,6 +40,9 @@
     --cat-colores: #A97BDE;   --cat-colores-ink: #FFFFFF;
     --cat-figuras: #7C8CA6;   --cat-figuras-ink: #FFFFFF;
     --cat-dinero: #48A868;    --cat-dinero-ink: #FFFFFF;
+    --cat-trabajo: #3F6FA6;   --cat-trabajo-ink: #FFFFFF;
+    --cat-transporte: #2E8B8B; --cat-transporte-ink: #FFFFFF;
+    --cat-salud: #C0576E;     --cat-salud-ink: #FFFFFF;
     --cat-social: #E96FA0;    --cat-social-ink: #FFFFFF;
     --cat-question: #9C7FE0;  --cat-question-ink: #FFFFFF;
     --cat-dolor: #C1443E;     --cat-dolor-ink: #FFFFFF;
@@ -283,6 +286,28 @@
   @keyframes mascot-bob{ 0%{transform:translateY(0) rotate(-6deg) scale(1);} 100%{transform:translateY(-16px) rotate(6deg) scale(1.06);} }
   @keyframes mascot-poke{ 0%{transform:scale(1) rotate(0);} 25%{transform:scale(1.35) rotate(-14deg);} 50%{transform:scale(.88) rotate(10deg);} 75%{transform:scale(1.15) rotate(-6deg);} 100%{transform:scale(1) rotate(0);} }
   @keyframes mascot-flourish{ 0%{transform:translateY(0) rotate(0) scale(1);} 20%{transform:translateY(-22px) rotate(-12deg) scale(1.1);} 40%{transform:translateY(0) rotate(10deg) scale(.95);} 60%{transform:translateY(-10px) rotate(-8deg) scale(1.05);} 80%{transform:translateY(0) rotate(6deg) scale(1);} 100%{transform:translateY(0) rotate(0) scale(1);} }
+  .pinned-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px;}
+  .pinned-chip{ border:2px solid var(--accent); background:var(--surface); color:var(--ink); border-radius:999px; padding:9px 14px;
+    font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px; font-family:inherit;}
+  .pinned-chip.more{border-style:dashed; color:var(--accent);}
+  .sentence-word.editable{cursor:pointer;}
+  .sentence-word.selected{outline:3px solid var(--accent); background:#EDE9FC;}
+  .sentence-word.speaking{background:#FFF1B8; border-color:#F2B84B;}
+  .sentence-tools{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0 14px;}
+  .mini-btn{ border:2px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:7px 12px; font-size:13.5px; font-weight:700; font-family:inherit;}
+  .mini-btn[disabled]{opacity:.45;}
+  .round-action[disabled]{opacity:.45;}
+  .msg-edit-card{ background:var(--surface); border:2px solid var(--line); border-radius:var(--radius-md); padding:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;}
+  .msg-edit-card .m-text{flex:1; min-width:170px; font-weight:700;}
+  .msg-edit-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .level-card{ background:var(--surface); border:2px solid var(--line); border-radius:var(--radius-lg); padding:18px 20px; margin-bottom:14px;}
+  .level-card.focus{border-color:var(--accent); box-shadow:0 0 0 4px #EDE9FC;}
+  .level-card h3{font-size:18px; display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+  .level-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .oral-eval{ background:var(--surface-2); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-top:16px; text-align:left;}
+  .oral-note{font-size:13.5px; color:var(--ink-soft); margin:8px 0;}
+  body[data-style="adulto"]{ --accent:#3F5E8C; --radius-lg:14px; --radius-md:10px; }
+  body[data-style="adulto"]::before{ opacity:.25; filter:blur(80px);}
   .mascot-avatar{ touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
   .mascot-avatar:hover{ filter:brightness(1.08); }
   .mascot-widget.mascot-dragging{ transition:none; z-index:70; }
@@ -529,7 +554,7 @@ const CORE_CATEGORIES = [
   { id:'acciones', name:'Acciones', color:'verb', emoji:'🏃', words:[
     {label:'querer', emoji:'🤲'}, {label:'ir', emoji:'🚶'}, {label:'jugar', emoji:'🧩'},
     {label:'comer', emoji:'🍽️'}, {label:'beber', emoji:'🥤'}, {label:'parar', emoji:'✋'},
-    {label:'ayudar', emoji:'🆘'}, {label:'ver', emoji:'👀'}, {label:'dormir', emoji:'😴'}, {label:'más', emoji:'➕'}
+    {label:'ayudar', emoji:'🆘'}, {label:'ver', emoji:'👀'}, {label:'dormir', emoji:'😴'}, {label:'más', emoji:'➕'}, {label:'necesito', emoji:'☝️'}, {label:'tengo', emoji:'👐'}, {label:'estoy', emoji:'🧍'}
   ]},
   { id:'emociones', name:'Emociones', color:'emo', emoji:'🎭', words:[
     {label:'feliz', emoji:'😄'}, {label:'triste', emoji:'😢'}, {label:'enojado', emoji:'😠'},
@@ -597,6 +622,21 @@ const CORE_CATEGORIES = [
     {label:'dinero', emoji:'💰'}, {label:'moneda', emoji:'🪙'}, {label:'billete', emoji:'💵'},
     {label:'comprar', emoji:'🛒'}, {label:'pagar', emoji:'💳'}, {label:'vuelto', emoji:'🧾'}
   ]},
+  { id:'trabajo', name:'Trabajo', color:'trabajo', emoji:'💼', words:[
+    {label:'trabajo', emoji:'💼'}, {label:'reunión', emoji:'👥'}, {label:'jefe', emoji:'🧑‍💼'}, {label:'compañero', emoji:'🧑‍🤝‍🧑'},
+    {label:'horario', emoji:'🕒'}, {label:'computadora', emoji:'💻'}, {label:'descanso', emoji:'☕'}, {label:'correo', emoji:'✉️'},
+    {label:'llamada', emoji:'📞'}, {label:'proyecto', emoji:'📁'}, {label:'salario', emoji:'💵'}
+  ]},
+  { id:'transporte', name:'Compras y transporte', color:'transporte', emoji:'🚌', words:[
+    {label:'colectivo', emoji:'🚌'}, {label:'tren', emoji:'🚆'}, {label:'taxi', emoji:'🚕'}, {label:'parada', emoji:'🚏'},
+    {label:'boleto', emoji:'🎫'}, {label:'cuánto cuesta', emoji:'🏷️'}, {label:'tarjeta', emoji:'💳'}, {label:'efectivo', emoji:'💵'},
+    {label:'bolsa', emoji:'🛍️'}, {label:'turno', emoji:'🔢'}, {label:'fila', emoji:'🧍'}, {label:'dónde queda', emoji:'📍'}
+  ]},
+  { id:'salud_adulto', name:'Salud y citas', color:'salud', emoji:'🩺', words:[
+    {label:'médico', emoji:'🩺'}, {label:'turno médico', emoji:'📅'}, {label:'receta', emoji:'📄'}, {label:'medicamento', emoji:'💊'},
+    {label:'análisis', emoji:'🧪'}, {label:'mareo', emoji:'😵'}, {label:'dolor fuerte', emoji:'😖'}, {label:'dolor leve', emoji:'🙂'},
+    {label:'alergia', emoji:'🤧'}, {label:'ambulancia', emoji:'🚑'}, {label:'hospital', emoji:'🏥'}, {label:'farmacia', emoji:'💊'}
+  ]},
   { id:'social', name:'Social', color:'social', emoji:'👋', words:[
     {label:'hola', emoji:'👋'}, {label:'adiós', emoji:'🙋‍♂️'}, {label:'por favor', emoji:'🙏'},
     {label:'gracias', emoji:'💜'}, {label:'sí', emoji:'✅'}, {label:'no', emoji:'❌'}
@@ -628,7 +668,7 @@ const THEMES = {
            {label:'avión',emoji:'✈️'},{label:'barco',emoji:'⛴️'},{label:'bicicleta',emoji:'🚲'}]},
 };
 
-const APP_VERSION = 'v2026.10.01-1';
+const APP_VERSION = 'v2026.10.09-1';
 const AVATAR_CHOICES = ['🙂','👦','👧','🧒','😊','🐻','🐰','🦁','🐼','🦊'];
 
 // ---------- Mascota: compañero animado, original (no personajes con derechos de autor) ----------
@@ -690,10 +730,16 @@ const ACHIEVEMENTS = [
 
 // Predicción de próximas palabras según la última tocada (tipo teclado predictivo AAC).
 const PREDICTIONS = {
-  'yo':['quiero','necesito','estoy'],
-  'tengo':['hambre','sueño','frío','calor'],
-  'quiero':['jugar','comer','beber','dormir'],
-  'estoy':['feliz','triste','cansado','con miedo'],
+  'yo':['quiero','necesito','estoy','tengo'],
+  'tengo':['hambre','sueño','frío','calor','miedo'],
+  'quiero':['agua','comida','jugar','dormir','baño'],
+  'querer':['agua','comida','jugar','dormir','baño'],
+  'necesito':['ayuda','agua','baño','descansar'],
+  'estoy':['feliz','triste','cansado','con miedo','enojado'],
+  'no':['quiero','puedo','gracias'],
+  'ir':['baño','escuela','casa','parque'],
+  'beber':['agua','jugo','leche'],
+  'comer':['comida','pan','fruta'],
 };
 
 // Palabras para la pantalla de comunicación rápida (emergencias / necesidades urgentes).
@@ -702,8 +748,162 @@ const QUICK_WORDS = [
   {label:'baño', emoji:'🚽'}, {label:'agua', emoji:'💧'}, {label:'comida', emoji:'🍎'},
   {label:'con miedo', emoji:'😨'}, {label:'cansado', emoji:'🥱'}, {label:'tengo frío', emoji:'🥶'}, {label:'tengo calor', emoji:'🥵'}
 ];
+
+// ---------- Ayuda rápida ampliada ----------
+const QUICK_EXTRA = [
+  {label:'Pará, por favor', emoji:'✋'}, {label:'No me toques', emoji:'🚫'}, {label:'Me siento mal', emoji:'🤒'},
+  {label:'Necesito irme', emoji:'🏃'}, {label:'Quiero llamar a…', emoji:'📞'}
+];
+
+// ---------- Mis mensajes: frases completas que se dicen con un solo toque ----------
+const MESSAGE_GROUPS = [
+  {id:'pedir', label:'Pedir y decidir', emoji:'🙋'},
+  {id:'entender', label:'Entender y aclarar', emoji:'❓'},
+  {id:'malestar', label:'Malestar y sensaciones', emoji:'😣'},
+  {id:'espacio', label:'Espacio y compañía', emoji:'🤝'},
+  {id:'conversar', label:'Conversar', emoji:'💬'},
+  {id:'urgente', label:'Urgente', emoji:'🆘'},
+];
+const DEFAULT_MESSAGES = [
+  {text:'Quiero decirte algo', emoji:'🗣️', group:'pedir', pinned:true},
+  {text:'Necesito ayuda', emoji:'🆘', group:'pedir', pinned:true},
+  {text:'Quiero descansar', emoji:'🛋️', group:'pedir'},
+  {text:'No quiero', emoji:'🙅', group:'pedir', pinned:true},
+  {text:'Ya terminé', emoji:'✅', group:'pedir', pinned:true},
+  {text:'Sí, acepto', emoji:'👍', group:'pedir'},
+  {text:'No, gracias', emoji:'🚫', group:'pedir'},
+  {text:'Quiero elegir yo', emoji:'☝️', group:'pedir'},
+  {text:'Cambié de opinión', emoji:'🔄', group:'pedir'},
+  {text:'Quiero agua', emoji:'💧', group:'pedir'},
+  {text:'Quiero comer', emoji:'🍽️', group:'pedir'},
+  {text:'Necesito ir al baño', emoji:'🚽', group:'pedir'},
+  {text:'No entiendo', emoji:'🤔', group:'entender', pinned:true},
+  {text:'Repetí, por favor', emoji:'🔁', group:'entender'},
+  {text:'Explicame, por favor', emoji:'💡', group:'entender'},
+  {text:'Más despacio, por favor', emoji:'🐢', group:'entender'},
+  {text:'Esperá, estoy pensando', emoji:'⏳', group:'entender'},
+  {text:'Me duele', emoji:'🤕', group:'malestar'},
+  {text:'Me siento mal', emoji:'🤒', group:'malestar'},
+  {text:'Tengo miedo', emoji:'😨', group:'malestar'},
+  {text:'Hay mucho ruido', emoji:'🔊', group:'malestar'},
+  {text:'Hay mucha luz', emoji:'🔆', group:'malestar'},
+  {text:'Estoy sobrecargado, necesito calma', emoji:'🧘', group:'malestar'},
+  {text:'Me incomoda esto', emoji:'😖', group:'malestar'},
+  {text:'Quiero estar solo', emoji:'🚪', group:'espacio'},
+  {text:'Necesito privacidad', emoji:'🔒', group:'espacio'},
+  {text:'Quedate conmigo, por favor', emoji:'🤝', group:'espacio'},
+  {text:'Necesito un momento', emoji:'⏸️', group:'espacio', pinned:true},
+  {text:'Necesito tiempo a solas', emoji:'🌙', group:'espacio'},
+  {text:'Hola', emoji:'👋', group:'conversar'},
+  {text:'Buen día', emoji:'☀️', group:'conversar'},
+  {text:'¿Cómo estás?', emoji:'🙂', group:'conversar'},
+  {text:'Gracias', emoji:'💜', group:'conversar'},
+  {text:'Estoy de acuerdo', emoji:'🤝', group:'conversar'},
+  {text:'No estoy de acuerdo', emoji:'❌', group:'conversar'},
+  {text:'Contame más', emoji:'👂', group:'conversar'},
+  {text:'Tengo una pregunta', emoji:'❓', group:'conversar'},
+  {text:'Chau, hasta luego', emoji:'👋', group:'conversar'},
+  {text:'Pará, por favor', emoji:'✋', group:'urgente'},
+  {text:'No me toques', emoji:'🚫', group:'urgente'},
+  {text:'Necesito irme', emoji:'🏃', group:'urgente'},
+  {text:'Quiero llamar a…', emoji:'📞', group:'urgente'},
+];
+function defaultMessages(){
+  return DEFAULT_MESSAGES.map((m,i)=>({ id:'m'+i, text:m.text, emoji:m.emoji, group:m.group, pinned:!!m.pinned }));
+}
+// Dice un mensaje (con la voz grabada si existe) y lo registra como uso de comunicación funcional.
+async function useMessage(p, m, targetEl){
+  markInteraction();
+  hapticFeedback(p, 'good');
+  if(targetEl) sparkAt(targetEl, p);
+  speakItem(p, { label:m.text, emoji:m.emoji });
+  p.progress.messagesUsed = (p.progress.messagesUsed||0) + 1;
+  p.progress.msgByGroup = p.progress.msgByGroup || {};
+  p.progress.msgByGroup[m.group] = (p.progress.msgByGroup[m.group]||0) + 1;
+  await afterProgressUpdate(p);
+}
+
+// ---------- Predicción de palabras (ayuda opcional: la persona decide) ----------
+const PRED_EMOJI = { quiero:'🤲', necesito:'☝️', estoy:'🧍', tengo:'👐', hambre:'😋', 'sueño':'😴', 'frío':'🥶', calor:'🥵', miedo:'😨',
+  puedo:'💪', ayuda:'🆘', descansar:'🛋️', voy:'🚶', quieres:'🤲' };
+const PRED_BY_CATEGORY = {
+  personas:['quiero','necesito','estoy'], acciones:['agua','comida','baño','juguete'],
+  necesidades:['por favor','gracias','más'], emociones:['por favor','gracias'], dolor:['ayudar','por favor'],
+  comidas:['por favor','más','gracias'], higiene:['ayudar','por favor'], vestirse:['ayudar','por favor']
+};
+function getPredictions(p, words){
+  if(p.predictions===false || !words.length) return [];
+  const last = words[words.length-1];
+  const key = normalizeWord(last.label);
+  let list = PREDICTIONS[key];
+  if(!list){
+    const cat = CORE_CATEGORIES.find(c=>c.words.some(w=>normalizeWord(w.label)===key));
+    list = (cat && PRED_BY_CATEGORY[cat.id]) || [];
+  }
+  return list.filter(l=>normalizeWord(l)!==key);
+}
+// Frases de ejemplo que se cargan en la franja para poder editarlas (no se dicen solas).
+const MODEL_PHRASES = [
+  ['yo','quiero','agua'], ['necesito','ir','baño'], ['yo','quiero','jugar'],
+  ['yo','tengo','hambre'], ['yo','estoy','cansado'], ['mamá','ayudar','por favor']
+];
+function recordPhrase(p, words){
+  const n = words.length, pr = p.progress;
+  pr.phraseWordsTotal = (pr.phraseWordsTotal||0) + n;
+  if(n > (pr.phraseMaxLen||0)) pr.phraseMaxLen = n;
+  pr.phrasesSpoken = (pr.phrasesSpoken||0) + 1;
+  if(n >= 2) pr.multiWordPhrases = (pr.multiWordPhrases||0) + 1;
+  const key = words.map(w=>normalizeWord(w.label)).join(' ');
+  pr.phrasesSeen = pr.phrasesSeen || [];
+  if(!pr.phrasesSeen.includes(key) && pr.phrasesSeen.length < 300) pr.phrasesSeen.push(key);
+}
+// Reproducción palabra por palabra (resalta cada palabra mientras suena).
+let wordByWordToken = 0;
+async function speakWordByWord(p, words){
+  const token = ++wordByWordToken;
+  const idx = await ensureVoiceIndex(p.id);
+  for(let i=0;i<words.length;i++){
+    if(token !== wordByWordToken) return;
+    document.querySelectorAll('.sentence-strip .sentence-word').forEach((c,j)=>c.classList.toggle('speaking', j===i));
+    const w = words[i];
+    if(p.useOwnVoice!==false && idx.has(normalizeWord(w.label))){ await playRecordingClip(p.id, w.label); }
+    else{ speak(w.label, p.voiceRate, p.voicePitch); await new Promise(r=>setTimeout(r, 650 + w.label.length*70)); }
+    await new Promise(r=>setTimeout(r, 250));
+  }
+  document.querySelectorAll('.sentence-strip .sentence-word').forEach(c=>c.classList.remove('speaking'));
+}
+
+// ---------- Micrófono: se libera siempre que se deja de usar ----------
+let activeMicStream = null;
+function releaseMic(){
+  try{ if(activeMicStream) activeMicStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  activeMicStream = null;
+  try{ if(state.practice && state.practice.rec) state.practice.rec.abort(); }catch(e){}
+  try{ if(state.practice) state.practice.rec = null; }catch(e){}
+}
+
+// ---------- Ruta de aprendizaje (opcional, no obligatoria) ----------
+const LEARNING_LEVELS = [
+  { n:1, emoji:'👂', title:'Comprender', desc:'Escuchar palabras, asociarlas con imágenes, reconocer objetos y entender indicaciones sencillas.',
+    acts:['practice-listen','practice-read','practice-balloons','practice-memotest','practice-puzzle'] },
+  { n:2, emoji:'🎵', title:'Explorar sonidos', soon:true,
+    desc:'Atención auditiva, imitación de sonidos y discriminación de sonidos del habla, según el objetivo de cada persona. Estos juegos todavía no están en la aplicación: por ahora el tablero reproduce sonidos de objetos y animales (con "Sonidos temáticos" activado) y los objetivos de sonidos se trabajan mejor con un profesional.', acts:[] },
+  { n:3, emoji:'🗣️', title:'Producir palabras', desc:'Escuchar un modelo, intentar decir la palabra, repetir si se desea y escuchar la propia grabación. Sin presión: es opcional.',
+    acts:['practice-say'] },
+  { n:4, emoji:'🧩', title:'Construir frases', desc:'Combinar palabras, practicar estructuras breves y ampliar de a poco la longitud de los mensajes.',
+    acts:['practice-sequence','board'] },
+  { n:5, emoji:'📖', title:'Usar el lenguaje en contexto', desc:'Saludar, pedir, responder preguntas, relatar situaciones y conversar en escenas de la vida real.',
+    acts:['practice-story','messages'] },
+];
+async function bumpActivity(id){
+  const p = state.profilesCache[state.currentId] || await loadProfile(state.currentId);
+  p.progress.activityCounts = p.progress.activityCounts || {};
+  p.progress.activityCounts[id] = (p.progress.activityCounts[id]||0) + 1;
+  await saveProfile(p);
+}
+
 function renderMascot(p, mood){
-  if(!p || p.visualStyle==='adolescente') return null;
+  if(!p || p.visualStyle==='adolescente' || p.visualStyle==='adulto') return null;
   const m = MASCOTS[p.mascot] || MASCOTS.fox;
   if(!state.mascotPhrase){
     state.mascotPhrase = pickMascotPhrase(p, mood);
@@ -731,7 +931,8 @@ function setMascotMood(p, mood, opts){
   const phrase = pickMascotPhrase(p, mood);
   state.mascotMood = (mood==='greet') ? 'idle' : mood;
   state.mascotPhrase = phrase;
-  if(p && opts.speak){
+  const mascotVisible = !p || !p.visualStyle || p.visualStyle==='infantil';
+  if(p && opts.speak && mascotVisible){
     if(opts.delayMs){
       setTimeout(()=>{ if(state.mascotPhrase===phrase) speak(phrase, p.voiceRate, p.voicePitch); }, opts.delayMs);
     }else{
@@ -953,7 +1154,7 @@ function findWordByLabel(p, label){
   const theme = THEMES[p.theme];
   if(theme){ const hit = theme.words.find(w=>normalizeWord(w.label)===norm); if(hit) return hit; }
   if(p.customWords){ const hit = p.customWords.find(w=>normalizeWord(w.label)===norm); if(hit) return hit; }
-  return { label, emoji:'💬' };
+  return { label, emoji: PRED_EMOJI[norm] || '💬' };
 }
 // Racha de aciertos consecutivos en los juegos de práctica (para logros y frase especial de la mascota).
 function registerStreak(p, correct){
@@ -1056,6 +1257,7 @@ function defaultProfile(id){
     categoriesEnabled:{
       personas:true, acciones:true, emociones:true, cualidades:true, necesidades:true,
       dolor:true, comidas:true,
+      trabajo:false, transporte:false, salud_adulto:false,
       higiene:true, vestirse:true, escuela:true, casa:true,
       aseo:false, iglesia:false, colores:false, figuras:false, dinero:false,
       social:true, preguntas:false, tema:true
@@ -1069,6 +1271,11 @@ function defaultProfile(id){
     manualPuzzleSize:2,
     createdAt: new Date().toISOString(),
     reportNotes:'',
+    messages: defaultMessages(),
+    predictions:true,
+    oralTrackExact:false,
+    generalizationLog:[],
+    pathFocus:[],
     scanningEnabled:false,
     scanSpeed:1800,
     scanAudio:true,
@@ -1077,7 +1284,7 @@ function defaultProfile(id){
     themeSounds:true,
     avatarCfg:{ skin:1, hairStyle:'corto', hairColor:1, shirt:0, accessory:'ninguno' },
     unlockedAchievements:[],
-    progress:{ wordsSpoken:0, sentencesBuilt:0, practiceCorrect:0, practiceAttempts:0, sequencesCompleted:0, puzzlesCompleted:0, balloonsPopped:0, bestStreak:0, memotestsCompleted:0 }
+    progress:{ wordsSpoken:0, sentencesBuilt:0, practiceCorrect:0, practiceAttempts:0, sequencesCompleted:0, puzzlesCompleted:0, balloonsPopped:0, bestStreak:0, memotestsCompleted:0, messagesUsed:0, msgByGroup:{}, oralAttempts:0, oralUnderstood:0, oralExact:0, oralAutoChecks:0, oralAutoMatches:0, compAttempts:0, compCorrect:0, phraseWordsTotal:0, phraseMaxLen:0, multiWordPhrases:0, phrasesSeen:[], activityCounts:{} }
   };
 }
 // Combina un perfil guardado con los valores por defecto (por si se agregaron campos nuevos)
@@ -1112,6 +1319,10 @@ let state = {
   mascotPhrase:null,
   mascotPoke:false,
   mascotPokeCount:0,
+  sentenceSel:null,
+  showModels:false,
+  messagesEdit:false,
+  messagesGroup:'all',
   mascotDragging:false,
   mascotPos:null
 };
@@ -1578,6 +1789,8 @@ function getPuzzleSize(p){
 // ---------- Render raíz ----------
 async function render(){
   const app = $('#app');
+  const micNeeded = state.view==='practice-say' || ((state.view==='board' || state.view==='messages') && state.recordingWord);
+  if(!micNeeded) releaseMic();
   app.innerHTML = '';
   app.appendChild(renderTopbar());
   if(state.view==='profiles') app.appendChild(await renderProfilesView());
@@ -1591,6 +1804,8 @@ async function render(){
   else if(state.view==='practice-puzzle') app.appendChild(await renderPuzzlePractice());
   else if(state.view==='practice-balloons') app.appendChild(await renderBalloonsPractice());
   else if(state.view==='practice-memotest') app.appendChild(await renderMemotest());
+  else if(state.view==='messages') app.appendChild(await renderMessagesView());
+  else if(state.view==='path') app.appendChild(await renderPathView());
   else if(state.view==='story-menu') app.appendChild(await renderStoryMenu());
   else if(state.view==='story-play') app.appendChild(await renderStoryPlay());
   else if(state.view==='report') app.appendChild(await renderReportView());
@@ -1599,7 +1814,7 @@ async function render(){
   app.appendChild(el('footer',{class:'note no-print'}, `Comunica+ · Tablero de comunicación pictográfica para acompañar el aprendizaje del lenguaje. · ${APP_VERSION}`));
   if(state.currentId && state.profilesCache[state.currentId] && state.view!=='report'){
     const p = state.profilesCache[state.currentId];
-    document.body.dataset.style = p.visualStyle==='adolescente' ? 'adolescente' : 'infantil';
+    document.body.dataset.style = (p.visualStyle==='adolescente' || p.visualStyle==='adulto') ? p.visualStyle : 'infantil';
     document.body.dataset.intensity = p.sensoryEffects===false ? 'calmado' : (p.sensoryIntensity==='alto' ? 'alto' : 'normal');
     const mascotEl = renderMascot(p, state.mascotMood);
     if(mascotEl) app.appendChild(mascotEl);
@@ -1639,10 +1854,11 @@ function renderTopbar(){
   if(state.view!=='profiles') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Perfiles', onclick:()=>{state.view='profiles'; setMascotMood(null,'idle'); render();}}, '🏠 Perfiles'));
   if(state.currentId && state.view!=='board') actions.push(el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Ir al tablero', onclick:()=>{state.view='board'; setMascotMood(null,'idle'); render();}}, '🗣️ Ir al tablero'));
   if(state.currentId && !state.view.startsWith('practice')) actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Aprender a hablar', onclick:()=>{state.view='practice-menu'; setMascotMood(null,'idle'); render();}}, '🎓 Aprender a hablar'));
+  if(state.currentId && state.view!=='messages') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Mis mensajes', onclick:()=>{state.view='messages'; setMascotMood(null,'idle'); render();}}, '💬 Mis mensajes'));
   if(state.currentId && state.view!=='report') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Reporte', onclick:()=>{state.view='report'; render();}}, '🖨️ Reporte'));
-  if(state.currentId && state.view!=='achievements') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Logros', onclick:()=>{state.view='achievements'; render();}}, '🏆 Logros'));
+  if(state.currentId && state.view!=='achievements') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Logros', onclick:()=>{state.view='achievements'; render();}}, ((state.profilesCache[state.currentId]||{}).visualStyle==='adulto') ? '🏆 Hitos' : '🏆 Logros'));
   if(state.currentId && state.view!=='config') actions.push(el('button',{class:'pill-btn scan-item', 'data-scan-label':'Configurar', onclick:()=>{state.editingId=state.currentId; state.view='config'; render();}}, '⚙️ Configurar'));
-  const quickBtn = state.currentId && state.view!=='quick' ? el('button',{class:'pill-btn warn', style:'font-weight:800;', onclick:()=>{state.view='quick'; setMascotMood(null,'idle'); render();}}, '🆘 Ayuda rápida') : null;
+  const quickBtn = state.currentId && state.view!=='quick' ? el('button',{class:'pill-btn warn scan-item', 'data-scan-label':'Ayuda rápida', style:'font-weight:800;', onclick:()=>{state.view='quick'; setMascotMood(null,'idle'); render();}}, '🆘 Ayuda rápida') : null;
   return el('div',{class:'topbar no-print'},[
     el('div',{class:'brand'},[
       el('div',{class:'brand-badge'},'💬'),
@@ -1657,6 +1873,159 @@ function renderTopbar(){
       ...(quickBtn ? [quickBtn, ...actions] : actions)
     ])
   ]);
+}
+
+
+// ============================== VISTA: MIS MENSAJES ==============================
+const ACT_LABELS = { 'practice-listen':'👂 Escuchar y elegir', 'practice-read':'👀 Leer y elegir', 'practice-say':'🗣️ Repetir en voz alta',
+  'practice-sequence':'🧩 Armar la frase', 'practice-puzzle':'🖼️ Rompecabezas', 'practice-balloons':'🎈 Globos', 'practice-memotest':'🃏 Memotest',
+  'practice-story':'📖 Historias', 'board':'🗣️ Tablero de comunicación', 'messages':'💬 Mis mensajes' };
+function launchActivity(id){
+  markInteraction();
+  if(id!=='board' && id!=='messages') bumpActivity(id);
+  if(id==='board'){ state.view='board'; render(); }
+  else if(id==='messages'){ state.view='messages'; render(); }
+  else if(id==='practice-sequence') startSequencePractice();
+  else if(id==='practice-say') startSayPractice();
+  else if(id==='practice-puzzle') startPuzzlePractice();
+  else if(id==='practice-balloons') startBalloonsPractice();
+  else if(id==='practice-story'){ state.view='story-menu'; render(); }
+  else if(id==='practice-memotest') startMemotest();
+  else startSimplePractice(id);
+}
+async function renderMessagesView(){
+  const p = await loadProfile(state.currentId);
+  if(!Array.isArray(p.messages)) p.messages = defaultMessages();
+  const all = p.messages;
+  const wrap = el('div',{});
+  if(state.recordingWord) wrap.appendChild(await renderVoiceRecorderPanel(p, state.recordingWord));
+  const edit = !!state.messagesEdit;
+  wrap.appendChild(el('div',{class:'card'},[
+    el('div',{class:'section-title'},'💬 Mis mensajes'),
+    el('div',{class:'section-sub'}, edit
+      ? 'Modo edición: cambiá el texto, el orden y el grupo de cada mensaje, elegí cuáles quedan fijados arriba del tablero (📌) y grabá tu propia voz (🎙️).'
+      : 'Tocá un mensaje para decirlo completo, con un solo toque. Los fijados (📌) también aparecen siempre arriba del tablero.'),
+    el('div',{class:'sentence-tools'},[
+      el('button',{class:'pill-btn'+(edit?' solid':''), onclick:()=>{ state.messagesEdit = !edit; render(); }}, edit ? '✔ Terminar de editar' : '✏️ Editar mis mensajes')
+    ])
+  ]));
+  const filt = el('div',{class:'theme-options', style:'margin:14px 0;'});
+  [{id:'all',label:'Todos',emoji:'📋'}, ...MESSAGE_GROUPS].forEach(g=>{
+    filt.appendChild(el('button',{class:'chip-option'+(state.messagesGroup===g.id?' selected':'')+(edit?'':' scan-item'), 'data-scan-label':g.label,
+      onclick:()=>{ state.messagesGroup = g.id; render(); }}, g.emoji+' '+g.label));
+  });
+  wrap.appendChild(filt);
+  const visible = all.filter(m=> state.messagesGroup==='all' || m.group===state.messagesGroup);
+  if(!edit){
+    const grid = el('div',{class:'quick-grid'});
+    visible.forEach(m=> grid.appendChild(el('button',{class:'quick-btn scan-item', 'data-scan-label':m.text, onclick:(ev)=>useMessage(p, m, ev.currentTarget)},[
+      el('span',{class:'emoji'}, m.emoji), el('span',{class:'label'}, m.text) ])));
+    if(!visible.length) grid.appendChild(el('div',{class:'muted'}, 'No hay mensajes en este grupo. Tocá "Editar mis mensajes" para agregar.'));
+    wrap.appendChild(grid);
+  }else{
+    const idx = await ensureVoiceIndex(p.id);
+    visible.forEach((m,vi)=>{
+      const gi = all.indexOf(m);
+      const move = (dir)=>{ const other = visible[vi+dir]; if(!other) return; const oi = all.indexOf(other); [all[gi], all[oi]] = [all[oi], all[gi]]; saveProfile(p).then(()=>render()); };
+      wrap.appendChild(el('div',{class:'msg-edit-card'},[
+        el('span',{class:'emoji', style:'font-size:26px;'}, m.emoji),
+        el('div',{class:'m-text'}, m.text + (idx.has(normalizeWord(m.text)) ? '  🎙️' : '') + (m.pinned ? '  📌' : '')),
+        el('select',{onchange:(e)=>{ m.group = e.target.value; saveProfile(p).then(()=>render()); }},
+          MESSAGE_GROUPS.map(g=> el('option',{value:g.id, ...(g.id===m.group?{selected:'selected'}:{})}, g.label))),
+        el('div',{class:'msg-edit-actions'},[
+          el('button',{class:'mini-btn', disabled: vi===0, title:'Subir', onclick:()=>move(-1)}, '▲'),
+          el('button',{class:'mini-btn', disabled: vi===visible.length-1, title:'Bajar', onclick:()=>move(1)}, '▼'),
+          el('button',{class:'mini-btn', title:'Fijar o soltar en el tablero', onclick:()=>{ m.pinned = !m.pinned; saveProfile(p).then(()=>render()); }}, m.pinned ? '📌 Fijado' : '📍 Fijar'),
+          el('button',{class:'mini-btn', title:'Cambiar texto', onclick:()=>{
+            const t = prompt('Texto del mensaje', m.text);
+            if(t && t.trim()){
+              m.text = t.trim();
+              const e2 = prompt('Emoji del mensaje (uno solo)', m.emoji);
+              if(e2 && e2.trim()) m.emoji = Array.from(e2.trim()).slice(0,2).join('');
+              saveProfile(p).then(()=>render());
+            }
+          }}, '✏️'),
+          el('button',{class:'mini-btn', title:'Grabar mi voz', onclick: async ()=>{
+            state.recordingWord = { label:m.text, emoji:m.emoji };
+            state.wordRecorder = { recording:false, mediaRecorder:null, previewDataUri:null, existingDataUri:null };
+            render();
+            try{
+              const res = await Storage.get('voice-clip:'+p.id+':'+normalizeWord(m.text));
+              if(res && res.value){ state.wordRecorder.existingDataUri = res.value; render(); }
+            }catch(e){}
+          }}, '🎙️'),
+          el('button',{class:'mini-btn', title:'Borrar', onclick:()=>{
+            if(!confirm('¿Borrar el mensaje "'+m.text+'"?')) return;
+            p.messages = all.filter(x=>x!==m); saveProfile(p).then(()=>render());
+          }}, '🗑')
+        ])
+      ]));
+    });
+    const draft = { emoji:'💬', text:'', group: state.messagesGroup!=='all' ? state.messagesGroup : 'pedir' };
+    wrap.appendChild(el('div',{class:'card', style:'margin-top:16px;'},[
+      el('div',{class:'section-title'},'Agregar un mensaje'),
+      el('div',{class:'custom-word-form'},[
+        el('div',{class:'field', style:'max-width:90px;'},[ el('label',{},'Emoji'), el('input',{type:'text', maxlength:'4', value:draft.emoji, oninput:e=>draft.emoji=e.target.value}) ]),
+        el('div',{class:'field', style:'flex:3; min-width:200px;'},[ el('label',{},'Mensaje'), el('input',{type:'text', placeholder:'ej: Quiero llamar a mamá', oninput:e=>draft.text=e.target.value}) ]),
+        el('div',{class:'field'},[ el('label',{},'Grupo'), el('select',{onchange:e=>draft.group=e.target.value},
+          MESSAGE_GROUPS.map(g=> el('option',{value:g.id, ...(g.id===draft.group?{selected:'selected'}:{})}, g.label))) ]),
+        el('button',{class:'pill-btn solid', onclick: async ()=>{
+          const t = draft.text.trim(); if(!t) return;
+          all.push({ id:'m'+Date.now(), text:t, emoji:(draft.emoji||'💬'), group:draft.group, pinned:false });
+          p.messages = all; await saveProfile(p); render();
+        }}, '+ Agregar')
+      ]),
+      el('div',{class:'save-bar', style:'justify-content:flex-start;'},[
+        el('button',{class:'pill-btn warn', onclick: async ()=>{
+          if(!confirm('¿Volver a los mensajes predeterminados? Se pierden los cambios que hiciste en esta lista.')) return;
+          p.messages = defaultMessages(); await saveProfile(p); render();
+        }}, '↺ Restaurar mensajes predeterminados')
+      ])
+    ]));
+  }
+  wrap.appendChild(el('div',{class:'helper-note'}, '💡 Los mensajes se pueden decir con la voz de la aplicación o con una grabación propia: una voz conocida suele entenderse mejor en el entorno habitual de la persona. Si cambiás el texto de un mensaje, hay que volver a grabarlo.'));
+  return wrap;
+}
+
+// ============================== VISTA: RUTA DE APRENDIZAJE ==============================
+async function renderPathView(){
+  const p = await loadProfile(state.currentId);
+  const counts = (p.progress && p.progress.activityCounts) || {};
+  const focus = new Set(p.pathFocus || []);
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'card'},[
+    el('div',{class:'section-title'},'🧭 Ruta de aprendizaje'),
+    el('div',{class:'section-sub'},'Un camino sugerido, no una escalera obligatoria. Se puede usar cualquier actividad en cualquier momento. Marcá con ⭐ los niveles que son objetivo por ahora. Una persona puede comprender mucho y no usar el habla oral, o practicar frases funcionales sin ejercicios de pronunciación: es totalmente válido. El tablero de comunicación está disponible en todos los niveles.'),
+    el('div',{class:'sentence-tools'},[
+      el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Ir al tablero', onclick:()=>launchActivity('board')}, '🗣️ Ir al tablero de comunicación'),
+      el('button',{class:'pill-btn scan-item', 'data-scan-label':'Mis mensajes', onclick:()=>launchActivity('messages')}, '💬 Mis mensajes')
+    ])
+  ]));
+  LEARNING_LEVELS.forEach(lv=>{
+    const isFocus = focus.has(lv.n);
+    const card = el('div',{class:'level-card'+(isFocus?' focus':'')});
+    card.appendChild(el('h3',{}, lv.emoji+' Nivel '+lv.n+' · '+lv.title+(isFocus?'  ⭐ Objetivo actual':'')));
+    card.appendChild(el('p',{class:'muted', style:'margin:4px 0 0;'}, lv.desc));
+    if(lv.soon) card.appendChild(el('div',{class:'helper-note'}, '🛠️ En preparación: este nivel todavía no tiene juegos propios en la aplicación.'));
+    if(lv.acts.length){
+      const row = el('div',{class:'level-acts'});
+      lv.acts.forEach(id=>{
+        const n = counts[id]||0;
+        row.appendChild(el('button',{class:'pill-btn scan-item', 'data-scan-label':(ACT_LABELS[id]||id), onclick:()=>launchActivity(id)},
+          (ACT_LABELS[id]||id) + (n ? '  ·  '+n+(n===1?' vez':' veces') : '')));
+      });
+      card.appendChild(row);
+    }
+    card.appendChild(el('div',{class:'sentence-tools', style:'margin-top:12px;'},[
+      el('button',{class:'mini-btn', onclick: async ()=>{
+        const cur = new Set(p.pathFocus||[]);
+        if(cur.has(lv.n)) cur.delete(lv.n); else cur.add(lv.n);
+        p.pathFocus = Array.from(cur).sort(); await saveProfile(p); render();
+      }}, isFocus ? 'Quitar de objetivos' : '⭐ Marcar como objetivo')
+    ]));
+    wrap.appendChild(card);
+  });
+  return wrap;
 }
 
 // ============================== VISTA: LOGROS ==============================
@@ -1689,7 +2058,7 @@ async function renderQuickView(){
     el('div',{class:'section-sub'},'Botones grandes para necesidades urgentes. Al tocar uno, lo dice en voz alta de inmediato.')
   ]));
   const grid = el('div',{class:'quick-grid'});
-  QUICK_WORDS.forEach(w=>{
+  QUICK_WORDS.concat(QUICK_EXTRA).forEach(w=>{
     grid.appendChild(el('button',{class:'quick-btn scan-item', 'data-scan-label':w.label, onclick: async (ev)=>{
       markInteraction();
       state.sentence = [w];
@@ -1760,6 +2129,7 @@ const CATEGORY_GROUPS = [
   { label:'Vida diaria', ids:['higiene','aseo','vestirse'] },
   { label:'Lugares', ids:['escuela','iglesia','casa'] },
   { label:'Conceptos', ids:['colores','figuras','dinero'] },
+  { label:'Vida adulta', ids:['trabajo','transporte','salud_adulto'] },
 ];
 const CAT_BY_ID = Object.fromEntries(CORE_CATEGORIES.map(c=>[c.id,c]));
 
@@ -1798,12 +2168,12 @@ async function renderConfigView(){
 
   const styleField = el('div',{class:'field'},[el('label',{},'Estilo visual')]);
   const styleOpts = el('div',{class:'theme-options'});
-  [['infantil','🎨 Infantil (colorido, con mascota)'], ['adolescente','🌓 Adolescente (más sobrio, sin mascota)']].forEach(([key,label])=>{
+  [['infantil','🎨 Infantil (colorido, con mascota)'], ['adolescente','🌓 Adolescente (más sobrio, sin mascota)'], ['adulto','🧑 Adulto (sobrio, sin mascota)']].forEach(([key,label])=>{
     styleOpts.appendChild(el('button',{class:'chip-option'+(p.visualStyle===key?' selected':''), onclick:()=>{p.visualStyle=key; render();}}, label));
   });
   styleField.appendChild(styleOpts); left.appendChild(styleField);
 
-  if(p.visualStyle!=='adolescente'){
+  if(!p.visualStyle || p.visualStyle==='infantil'){
     const mascotField = el('div',{class:'field'},[el('label',{},'Mascota')]);
     const mascotOpts = el('div',{class:'theme-options'});
     Object.entries(MASCOTS).forEach(([key,m])=>{
@@ -1896,6 +2266,18 @@ async function renderConfigView(){
       `Nivel actual: ${getOptionsCount(p)} opciones por ejercicio · frases de ${getSequenceLen(p)} palabras.`));
   }
   left.appendChild(diffField);
+
+  left.appendChild(el('div',{class:'toggle-row'},[
+    el('div',{},[ el('div',{class:'trow-text'},'💡 Mostrar ideas de palabras (predicción)'),
+      el('div',{class:'trow-sub'},'Sugiere cómo seguir la frase. Son solo ideas opcionales: la aplicación nunca agrega ni corrige nada sola.') ]),
+    el('label',{class:'switch'},[ el('input',{type:'checkbox', ...(p.predictions!==false?{checked:'checked'}:{}), onchange:e=>{p.predictions=e.target.checked;}}), el('span',{class:'slider-track'}) ])
+  ]));
+  left.appendChild(el('div',{class:'toggle-row'},[
+    el('div',{},[ el('div',{class:'trow-text'},'🎯 Registrar exactitud de pronunciación (profesionales)'),
+      el('div',{class:'trow-sub'},'Agrega, en "Repetir en voz alta", una marca opcional "aproximada / igual al modelo" que decide quien acompaña. Por defecto se registra solo si la palabra se entendió.') ]),
+    el('label',{class:'switch'},[ el('input',{type:'checkbox', ...(p.oralTrackExact?{checked:'checked'}:{}), onchange:e=>{p.oralTrackExact=e.target.checked;}}), el('span',{class:'slider-track'}) ])
+  ]));
+
 
   left.appendChild(el('div',{class:'save-bar'},[
     el('button',{class:'pill-btn warn', onclick:async()=>{
@@ -2065,6 +2447,26 @@ async function renderReportView(){
   progSection.appendChild(table);
   wrap.appendChild(progSection);
 
+  const pr = p.progress;
+  const grpName = id => (MESSAGE_GROUPS.find(g=>g.id===id)||{label:id}).label;
+  const avgLen = pr.phrasesSpoken ? (pr.phraseWordsTotal/pr.phrasesSpoken).toFixed(1) : '—';
+  const topActs = Object.entries(pr.activityCounts||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([id,n])=>(ACT_LABELS[id]||id)+' ('+n+')');
+  const log = Array.isArray(p.generalizationLog) ? p.generalizationLog : [];
+  const indSection = el('div',{class:'report-section'});
+  indSection.appendChild(el('h4',{},'Indicadores de aprendizaje y uso'));
+  indSection.appendChild(el('p',{class:'muted', style:'font-size:13px; margin:0 0 8px;'}, 'Se miran en conjunto y respecto de la propia persona; no se comparan con otras. El porcentaje de aciertos es solo un dato más. Comunicarse con pictogramas o mensajes sintetizados es tan válido como hablar.'));
+  const indTable = el('table',{class:'report-table'});
+  [
+    ['Comprensión', pr.compAttempts ? `${pr.compCorrect||0} respuestas acertadas en ${pr.compAttempts} actividades de reconocimiento (escuchar, leer, globos)` : 'Todavía sin datos'],
+    ['Producción oral', (pr.oralAttempts||pr.oralAutoChecks) ? `${pr.oralUnderstood||0} palabras entendidas en ${pr.oralAttempts||0} intentos (marcados por quien acompaña). Reconocimiento automático, solo orientativo: ${pr.oralAutoMatches||0} coincidencias en ${pr.oralAutoChecks||0} pruebas.`+(p.oralTrackExact?` Iguales al modelo: ${pr.oralExact||0}.`:'') : 'Todavía sin datos (es una práctica opcional)'],
+    ['Construcción del lenguaje', pr.phrasesSpoken ? `${pr.phrasesSpoken} frases dichas · ${(pr.phrasesSeen||[]).length} distintas · la más larga: ${pr.phraseMaxLen||0} palabras · promedio: ${avgLen} palabras` : 'Todavía sin datos'],
+    ['Comunicación funcional', pr.messagesUsed ? `${pr.messagesUsed} mensajes completos usados (`+Object.entries(pr.msgByGroup||{}).map(([g,n])=>grpName(g)+': '+n).join(' · ')+')' : 'Todavía sin datos'],
+    ['Generalización', log.length ? `${log.length} registros de uso fuera de la aplicación (ver abajo)` : 'Sin registros: se completa con lo que cuenta quien acompaña'],
+    ['Participación', topActs.length ? 'Actividades más elegidas: '+topActs.join(' · ') : 'Todavía sin datos'],
+  ].forEach(([l,v])=> indTable.appendChild(el('tr',{},[ el('td',{},l), el('td',{},v) ])));
+  indSection.appendChild(indTable);
+  wrap.appendChild(indSection);
+
   const chartSection = el('div',{class:'report-section'});
   chartSection.appendChild(el('h4',{},'Resumen visual'));
   const chartsRow = el('div',{class:'report-charts'});
@@ -2074,6 +2476,7 @@ async function renderReportView(){
     { label:'Frases armadas', value:p.progress.sentencesBuilt, color:'#7BC24A' },
     { label:'Frases secuenciadas', value:p.progress.sequencesCompleted||0, color:'#9C7FE0' },
     { label:'Rompecabezas armados', value:p.progress.puzzlesCompleted||0, color:'#4DA6E8' },
+    { label:'Mensajes usados', value:p.progress.messagesUsed||0, color:'#E96FA0' },
   ])}));
   chartSection.appendChild(chartsRow);
   wrap.appendChild(chartSection);
@@ -2086,6 +2489,31 @@ async function renderReportView(){
   if(p.customWords && p.customWords.length) tags.appendChild(el('span',{class:'report-tag'}, '⭐ '+p.customWords.length+' palabras personalizadas'));
   catSection.appendChild(tags);
   wrap.appendChild(catSection);
+
+
+  const genSection = el('div',{class:'report-section'});
+  genSection.appendChild(el('h4',{},'Registro de generalización (lo completa quien acompaña)'));
+  genSection.appendChild(el('p',{class:'muted', style:'font-size:13px; margin:0 0 8px;'}, 'Anotá cuándo y dónde usó lo aprendido en la vida real (casa, escuela, terapia, comunidad). Es información valiosa que la aplicación no puede medir sola.'));
+  if(log.length){
+    const gt = el('table',{class:'report-table'});
+    log.slice(-8).reverse().forEach((e)=>{
+      const real = log.indexOf(e);
+      gt.appendChild(el('tr',{},[ el('td',{}, e.date+' · '+e.place), el('td',{}, [ e.note+'  ', el('button',{class:'mini-btn no-print', onclick: async ()=>{ p.generalizationLog.splice(real,1); await saveProfile(p); render(); }}, '🗑') ]) ]));
+    });
+    genSection.appendChild(gt);
+  }
+  const gdraft = { place:'Casa', note:'' };
+  genSection.appendChild(el('div',{class:'custom-word-form no-print', style:'margin-top:10px;'},[
+    el('div',{class:'field', style:'max-width:170px;'},[ el('label',{},'Dónde'), el('select',{onchange:e=>gdraft.place=e.target.value},
+      ['Casa','Escuela','Terapia','Comunidad','Otro'].map(o=> el('option',{value:o}, o))) ]),
+    el('div',{class:'field', style:'flex:3; min-width:200px;'},[ el('label',{},'Qué pasó'), el('input',{type:'text', placeholder:'ej: Pidió agua solo, con el tablero', oninput:e=>gdraft.note=e.target.value}) ]),
+    el('button',{class:'pill-btn solid', onclick: async ()=>{
+      const t = gdraft.note.trim(); if(!t) return;
+      p.generalizationLog = (Array.isArray(p.generalizationLog)?p.generalizationLog:[]).concat([{ date:new Date().toISOString().slice(0,10), place:gdraft.place, note:t }]);
+      await saveProfile(p); render();
+    }}, '+ Anotar')
+  ]));
+  wrap.appendChild(genSection);
 
   const notesSection = el('div',{class:'report-section report-notes'});
   notesSection.appendChild(el('h4',{},'Notas para el profesional'));
@@ -2110,31 +2538,70 @@ async function renderBoardView(){
     wrap.appendChild(await renderVoiceRecorderPanel(p, state.recordingWord));
   }
 
+  // Mensajes importantes siempre a mano: se dicen con un solo toque sin salir del tablero.
+  const pinned = (p.messages||[]).filter(m=>m.pinned).slice(0,6);
+  if(pinned.length){
+    const pinRow = el('div',{class:'pinned-row'},[ el('span',{class:'prediction-label'}, '📌 Mis mensajes:') ]);
+    pinned.forEach(m=>{
+      pinRow.appendChild(el('button',{class:'pinned-chip scan-item', 'data-scan-label':m.text, onclick:(ev)=>useMessage(p, m, ev.currentTarget)},[ el('span',{class:'emoji'}, m.emoji), ' '+m.text ]));
+    });
+    pinRow.appendChild(el('button',{class:'pinned-chip more scan-item', 'data-scan-label':'Ver todos mis mensajes', onclick:()=>{ state.view='messages'; render(); }}, 'Ver todos ›'));
+    wrap.appendChild(pinRow);
+  }
+
   const words = state.sentence;
+  const sel = (state.sentenceSel!=null && state.sentenceSel>=0 && state.sentenceSel<words.length) ? state.sentenceSel : null;
+  state.sentenceSel = sel;
   const strip = el('div',{class:'sentence-strip'});
   if(words.length===0) strip.appendChild(el('span',{class:'empty-hint'},'Tocá una imagen para empezar a armar una frase…'));
-  else words.forEach(w=> strip.appendChild(el('div',{class:'sentence-word'},[ el('span',{class:'emoji'}, w.emoji), el('span',{}, w.label) ])));
+  else words.forEach((w,i)=> strip.appendChild(el('button',{class:'sentence-word editable'+(sel===i?' selected':''), title:'Tocá para editar esta palabra',
+    onclick:()=>{ state.sentenceSel = (sel===i) ? null : i; render(); }},[ el('span',{class:'emoji'}, w.emoji), el('span',{}, w.label) ])));
   strip.appendChild(el('div',{class:'sentence-actions'},[
-    el('button',{class:'round-action clear scan-item', onclick:async()=>{ state.sentence=[]; render(); }}, '🗑 Borrar'),
+    el('button',{class:'round-action back scan-item', disabled: words.length===0, onclick:()=>{ state.sentence = words.slice(0,-1); state.sentenceSel=null; render(); }}, '↩ Deshacer'),
+    el('button',{class:'round-action clear scan-item', onclick:async()=>{ state.sentence=[]; state.sentenceSel=null; wordByWordToken++; render(); }}, '🗑 Borrar'),
     el('button',{class:'round-action speak scan-item', onclick:async()=>{
       if(words.length===0) return;
       markInteraction();
+      wordByWordToken++;
+      recordPhrase(p, words);
       await speakSentence(p, words);
       p.progress.sentencesBuilt += 1; await afterProgressUpdate(p);
     }}, '🔊 Hablar')
   ]));
   wrap.appendChild(strip);
 
-  const lastWord = words[words.length-1];
-  const predictedLabels = lastWord ? PREDICTIONS[normalizeWord(lastWord.label)] : null;
-  if(predictedLabels && predictedLabels.length){
-    const predRow = el('div',{class:'prediction-row'},[ el('span',{class:'prediction-label'}, '💡 Podría seguir:') ]);
+  const toolsRow = el('div',{class:'sentence-tools'});
+  if(sel!==null){
+    const lastIdx = words.length-1;
+    toolsRow.appendChild(el('span',{class:'muted'}, 'Palabra elegida: '+words[sel].label));
+    toolsRow.appendChild(el('button',{class:'mini-btn', disabled: sel===0, onclick:()=>{ const a=state.sentence; [a[sel-1],a[sel]]=[a[sel],a[sel-1]]; state.sentenceSel=sel-1; render(); }}, '◀ Mover antes'));
+    toolsRow.appendChild(el('button',{class:'mini-btn', disabled: sel===lastIdx, onclick:()=>{ const a=state.sentence; [a[sel+1],a[sel]]=[a[sel],a[sel+1]]; state.sentenceSel=sel+1; render(); }}, 'Mover después ▶'));
+    toolsRow.appendChild(el('button',{class:'mini-btn', onclick:()=>{ state.sentence.splice(sel,1); state.sentenceSel=null; render(); }}, '✖ Quitar esta'));
+    toolsRow.appendChild(el('button',{class:'mini-btn', onclick:()=>{ speakItem(p, words[sel]); }}, '🔉 Escuchar esta'));
+    toolsRow.appendChild(el('button',{class:'mini-btn', onclick:()=>{ state.sentenceSel=null; render(); }}, 'Listo'));
+  }else if(words.length>0){
+    toolsRow.appendChild(el('span',{class:'muted'}, 'Tocá una palabra de la frase para moverla o quitarla.'));
+  }
+  if(words.length>1) toolsRow.appendChild(el('button',{class:'mini-btn scan-item', 'data-scan-label':'Palabra por palabra', onclick:()=>{ markInteraction(); speakWordByWord(p, words); }}, '🔉 Palabra por palabra'));
+  toolsRow.appendChild(el('button',{class:'mini-btn scan-item', 'data-scan-label':'Frases modelo', onclick:()=>{ state.showModels = !state.showModels; render(); }}, state.showModels ? '▲ Ocultar frases modelo' : '📋 Frases modelo'));
+  wrap.appendChild(toolsRow);
+  if(state.showModels){
+    const modelRow = el('div',{class:'pinned-row'},[ el('span',{class:'prediction-label'}, '📋 Probá con una (se carga para que la puedas cambiar):') ]);
+    MODEL_PHRASES.forEach(labels=>{
+      modelRow.appendChild(el('button',{class:'pinned-chip', onclick:()=>{ state.sentence = labels.map(l=>findWordByLabel(p,l)); state.sentenceSel=null; render(); }}, labels.join(' ')));
+    });
+    wrap.appendChild(modelRow);
+  }
+
+  const predictedLabels = getPredictions(p, words);
+  if(predictedLabels.length){
+    const predRow = el('div',{class:'prediction-row'},[ el('span',{class:'prediction-label'}, '💡 Ideas (opcionales, decidís vos):') ]);
     predictedLabels.forEach(lbl=>{
       const w2 = findWordByLabel(p, lbl);
-      predRow.appendChild(el('button',{class:'prediction-chip', onclick: async ()=>{
+      predRow.appendChild(el('button',{class:'prediction-chip scan-item', 'data-scan-label':w2.label, onclick: async ()=>{
         markInteraction();
         state.sentence.push(w2);
-        await speakItem(p, w2);
+        speakItem(p, w2);
         p.progress.wordsSpoken += 1; await afterProgressUpdate(p); render();
       }},[ el('span',{class:'emoji'}, w2.emoji), ' '+w2.label ]));
     });
@@ -2236,6 +2703,7 @@ async function renderVoiceRecorderPanel(p, word){
         if(wr.recording){ if(wr.mediaRecorder) wr.mediaRecorder.stop(); return; }
         try{
           const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+          activeMicStream = stream;
           const chunks = [];
           const mr = new MediaRecorder(stream);
           mr.ondataavailable = e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
@@ -2309,22 +2777,15 @@ async function renderPracticeMenu(){
   const wrap = el('div',{});
   wrap.appendChild(el('div',{class:'card'},[
     el('div',{class:'section-title'},'Aprender a hablar'),
-    el('div',{class:'section-sub'},'Cuatro formas de practicar, de la comprensión a la producción.'),
-    levelBadge(p, p.autoDifficulty ? `nivel ${getOptionsCount(p)} opciones` : 'fija')
+    el('div',{class:'section-sub'},'Ocho formas de practicar, de la comprensión al uso del lenguaje. Todas son opcionales y se pueden usar en cualquier orden.'),
+    levelBadge(p, p.autoDifficulty ? `nivel ${getOptionsCount(p)} opciones` : 'fija'),
+    el('div',{class:'sentence-tools'},[ el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Ruta de aprendizaje', onclick:()=>{ state.view='path'; render(); }}, '🧭 Ruta de aprendizaje (opcional)') ])
   ]));
   const grid = el('div',{class:'method-grid'});
   METHODS.forEach(m=>{
     grid.appendChild(el('div',{class:'method-card'},[
       el('span',{class:'m-emoji'}, m.emoji), el('h3',{}, m.title), el('p',{}, m.desc),
-      el('button',{class:'pill-btn solid scan-item', 'data-scan-label':m.title, onclick:()=>{
-        if(m.id==='practice-sequence') startSequencePractice();
-        else if(m.id==='practice-say') startSayPractice();
-        else if(m.id==='practice-puzzle') startPuzzlePractice();
-        else if(m.id==='practice-balloons') startBalloonsPractice();
-        else if(m.id==='practice-story') { state.view='story-menu'; render(); }
-        else if(m.id==='practice-memotest') startMemotest();
-        else startSimplePractice(m.id);
-      }}, 'Comenzar')
+      el('button',{class:'pill-btn solid scan-item', 'data-scan-label':m.title, onclick:()=>launchActivity(m.id)}, 'Comenzar')
     ]));
   });
   wrap.appendChild(grid);
@@ -2350,6 +2811,7 @@ async function resolvePracticeChoice(p, target, isTarget, nextMode){
   markInteraction();
   p.progress.practiceAttempts += 1;
   registerStreak(p, isTarget);
+  p.progress.compAttempts = (p.progress.compAttempts||0) + 1; if(isTarget) p.progress.compCorrect = (p.progress.compCorrect||0) + 1;
   hapticFeedback(p, isTarget?'good':'bad');
   if(isTarget){ state.practice.feedback='good'; setMascotMood(p,'good',{speak:true, delayMs:1500}); p.progress.practiceCorrect += 1; speak('¡Muy bien! '+target.label, p.voiceRate, p.voicePitch); }
   else{ state.practice.feedback={type:'bad', correct:target}; setMascotMood(p,'bad',{speak:true, delayMs:1900}); speak('No es esa. La correcta es: '+target.label, p.voiceRate, p.voicePitch); }
@@ -2427,67 +2889,77 @@ async function startSayPractice(){
   const p = await loadProfile(state.currentId);
   const pool = collectAllWordsForPractice(p);
   if(pool.length < 1) { alert('Activá al menos una palabra en la configuración para poder practicar.'); return; }
+  releaseMic();
   const target = pool[Math.floor(Math.random()*pool.length)];
   if(state.practice.recordingUrl) URL.revokeObjectURL(state.practice.recordingUrl);
-  state.practice = { target, options:[], locked:false, feedback:null, listening:false, recording:false, recordingUrl:null, mediaRecorder:null };
+  state.practice = { target, options:[], locked:false, feedback:null, listening:false, recording:false, recordingUrl:null, mediaRecorder:null, rec:null, autoNote:'', exact:null };
+  setMascotMood(null,'idle');
   state.view = 'practice-say'; render();
   setTimeout(()=>speakItem(p, target), 200);
 }
+// Habla: separamos "¿se entendió?" (lo juzga quien acompaña) de lo que "cree" el reconocimiento automático,
+// que es orientativo y nunca se presenta como un fracaso de la persona.
 async function renderSayPractice(){
   const p = await loadProfile(state.currentId);
-  const { target, feedback, listening, recording, recordingUrl } = state.practice;
+  const { target, feedback, listening, recording, recordingUrl, autoNote, exact } = state.practice;
   const wrap = el('div',{class:'practice-wrap'});
   const SR = getSpeechRecognition();
   const canRec = canRecordAudio();
 
   wrap.appendChild(el('div',{class:'practice-prompt'},[
-    el('div',{class:'section-sub'},'🗣️ Mirá, escuchá y repetí la palabra en voz alta'),
+    el('div',{class:'section-sub'},'🗣️ Mirá, escuchá y, si querés, probá decir la palabra'),
     el('div',{class:'say-target'},[
       el('span',{class:'say-emoji'}, target.emoji), el('div',{class:'big-word'}, target.label),
-      el('button',{class:'say-btn scan-item', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '),'Escuchar de nuevo'])
+      el('button',{class:'say-btn scan-item', 'data-scan-label':'Escuchar de nuevo', onclick:()=>speakItem(p, target)},[el('span',{},'🔊 '),'Escuchar de nuevo'])
     ])
   ]));
   wrap.appendChild(feedbackBanner(feedback));
+  if(autoNote) wrap.appendChild(el('div',{class:'oral-note'}, autoNote));
 
   const methodsWrap = el('div',{class:'say-methods'});
 
   if(SR){
     const block = el('div',{class:'say-method-block'});
-    block.appendChild(el('div',{class:'say-method-title'}, '🎙️ Reconocimiento automático'));
-    block.appendChild(el('button',{class:'mic-btn'+(listening?' listening':''), onclick:()=>{
+    block.appendChild(el('div',{class:'say-method-title'}, '🎙️ Reconocimiento automático (orientativo)'));
+    block.appendChild(el('button',{class:'mic-btn scan-item'+(listening?' listening':''), 'data-scan-label':'Grabar y verificar', onclick:()=>{
       if(state.practice.listening) return;
       try{
         const rec = new SR(); rec.lang='es-ES'; rec.maxAlternatives=3;
+        state.practice.rec = rec;
         state.practice.listening = true; render();
         rec.onresult = async (ev)=>{
-          const said = normalizeWord(ev.results[0][0].transcript);
+          const heard = normalizeWord(ev.results[0][0].transcript);
           const expected = normalizeWord(target.label);
-          const isMatch = said.includes(expected) || expected.includes(said);
-          p.progress.practiceAttempts += 1;
-          if(isMatch){ state.practice.feedback='good'; p.progress.practiceCorrect += 1; speak('¡Excelente!'); }
-          else{ state.practice.feedback='bad'; speak('Intentemos de nuevo: '+target.label); }
-          state.practice.listening = false; await saveProfile(p); render();
-          setTimeout(startSayPractice, 1800);
+          const isMatch = heard.length>=2 && (heard.includes(expected) || (heard.length>=Math.ceil(expected.length*0.6) && expected.includes(heard)));
+          p.progress.oralAutoChecks = (p.progress.oralAutoChecks||0) + 1;
+          if(isMatch) p.progress.oralAutoMatches = (p.progress.oralAutoMatches||0) + 1;
+          state.practice.listening = false;
+          state.practice.feedback = isMatch ? 'good' : null;
+          state.practice.autoNote = isMatch
+            ? '🎧 El reconocimiento automático coincidió con la palabra. Igual, quien acompaña puede confirmar abajo.'
+            : '🎧 El reconocimiento automático no pudo confirmarlo. Eso no quiere decir que se haya dicho mal: puede fallar con voces suaves, infantiles o con ruido. Quien acompaña puede marcar abajo si se entendió.';
+          await saveProfile(p); render();
         };
-        rec.onerror = ()=>{ state.practice.listening=false; render(); };
+        rec.onerror = ()=>{ state.practice.listening=false; state.practice.autoNote='🎧 No se pudo usar el reconocimiento automático (falta el permiso del micrófono, o no hay conexión). No pasa nada: quien acompaña puede marcar abajo si se entendió.'; render(); };
         rec.onend = ()=>{ if(state.practice.listening){ state.practice.listening=false; render(); } };
         rec.start();
       }catch(e){ state.practice.listening=false; render(); }
-    }},[ el('span',{}, listening?'🎙️':'🎤'), listening? 'Escuchando…' : 'Grabar y verificar' ]));
+    }},[ el('span',{}, listening?'🎙️':'🎤'), listening? 'Escuchando…' : 'Probar con reconocimiento' ]));
     methodsWrap.appendChild(block);
   }
 
   if(canRec){
     const block = el('div',{class:'say-method-block'});
-    block.appendChild(el('div',{class:'say-method-title'}, '⏺️ Grabación simple (sin verificación automática)'));
+    block.appendChild(el('div',{class:'say-method-title'}, '⏺️ Escucharse (la grabación no se guarda)'));
     if(!recordingUrl){
-      block.appendChild(el('button',{class:'mic-btn record'+(recording?' recording':''), onclick: async ()=>{
+      block.appendChild(el('button',{class:'mic-btn record scan-item'+(recording?' recording':''), 'data-scan-label':'Grabar mi voz', onclick: async ()=>{
         if(state.practice.recording){
           if(state.practice.mediaRecorder) state.practice.mediaRecorder.stop();
           return;
         }
         try{
           const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+          activeMicStream = stream;
           const chunks = [];
           const mr = new MediaRecorder(stream);
           mr.ondataavailable = e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
@@ -2496,6 +2968,7 @@ async function renderSayPractice(){
             state.practice.recordingUrl = URL.createObjectURL(blob);
             state.practice.recording = false;
             stream.getTracks().forEach(t=>t.stop());
+            activeMicStream = null;
             render();
           };
           state.practice.mediaRecorder = mr;
@@ -2505,34 +2978,51 @@ async function renderSayPractice(){
         }catch(e){ alert('No se pudo acceder al micrófono. Revisá los permisos del navegador.'); }
       }},[ el('span',{}, recording?'⏹️':'⏺️'), recording ? 'Detener grabación' : 'Grabar mi voz' ]));
     }else{
-      const audioEl = el('audio',{controls:'controls', src:recordingUrl});
-      block.appendChild(audioEl);
+      block.appendChild(el('audio',{controls:'controls', src:recordingUrl}));
       block.appendChild(el('div',{class:'manual-check'},[
-        el('button',{class:'pill-btn solid', onclick: async ()=>{
-          p.progress.practiceAttempts += 1; p.progress.practiceCorrect += 1;
-          await saveProfile(p); startSayPractice();
-        }}, '✅ Lo dijo bien'),
-        el('button',{class:'pill-btn', onclick: async ()=>{
-          p.progress.practiceAttempts += 1; await saveProfile(p);
+        el('button',{class:'pill-btn', onclick:()=>{
           if(state.practice.recordingUrl) URL.revokeObjectURL(state.practice.recordingUrl);
           state.practice.recordingUrl = null; render();
-        }}, '🔁 Grabar de nuevo')
+        }}, '🗑 Descartar grabación')
       ]));
     }
     methodsWrap.appendChild(block);
   }
+  if(SR || canRec) wrap.appendChild(methodsWrap);
+  else wrap.appendChild(el('div',{class:'helper-note'}, '🎤 Este navegador no permite grabar ni reconocer la voz. Está bien: se puede practicar igual, y quien acompaña marca abajo si se entendió.'));
 
-  if(!SR && !canRec){
-    wrap.appendChild(el('div',{class:'helper-note'}, '🎤 Este navegador no permite grabar ni verificar la voz. Pedile al niño que repita la palabra y marcá abajo cómo le fue.'));
-    wrap.appendChild(el('div',{class:'manual-check'},[
-      el('button',{class:'pill-btn solid', onclick: async ()=>{ p.progress.practiceAttempts+=1; p.progress.practiceCorrect+=1; await saveProfile(p); startSayPractice(); }}, '✅ Lo dijo bien'),
-      el('button',{class:'pill-btn', onclick: async ()=>{ p.progress.practiceAttempts+=1; await saveProfile(p); startSayPractice(); }}, '🔁 Practicar de nuevo')
-    ]));
-  }else{
-    wrap.appendChild(methodsWrap);
+  // Evaluación manual (siempre disponible): lo que realmente cuenta es si se entiende, no si suena idéntico al modelo.
+  const evalBox = el('div',{class:'oral-eval'},[
+    el('div',{class:'say-method-title'}, 'Quien acompaña: ¿se entendió la palabra?'),
+    el('div',{class:'oral-note'}, 'Intentarlo ya es participar. El reconocimiento automático puede equivocarse, y una palabra puede entenderse bien aunque no suene igual al modelo.')
+  ]);
+  if(p.oralTrackExact){
+    evalBox.appendChild(el('div',{class:'oral-note'}, 'Exactitud respecto del modelo (opcional, para profesionales):'));
+    evalBox.appendChild(el('div',{class:'grid-size-options', style:'margin-bottom:10px;'}, [
+      {id:'approx', label:'〰️ Aproximada'}, {id:'exact', label:'✅ Igual al modelo'}
+    ].map(o=> el('button',{class:'chip-option'+(exact===o.id?' selected':''), onclick:()=>{ state.practice.exact = (exact===o.id)?null:o.id; render(); }}, o.label))));
   }
+  evalBox.appendChild(el('div',{class:'manual-check', style:'justify-content:flex-start;'},[
+    el('button',{class:'pill-btn solid scan-item', 'data-scan-label':'Se entendió', onclick: async ()=>{
+      p.progress.oralAttempts = (p.progress.oralAttempts||0) + 1;
+      p.progress.oralUnderstood = (p.progress.oralUnderstood||0) + 1;
+      if(p.oralTrackExact && state.practice.exact==='exact') p.progress.oralExact = (p.progress.oralExact||0) + 1;
+      registerStreak(p, true);
+      setMascotMood(p,'good',{speak:true, delayMs:500});
+      await afterProgressUpdate(p); startSayPractice();
+    }}, '✅ Se entendió'),
+    el('button',{class:'pill-btn scan-item', 'data-scan-label':'Probar otra vez', onclick: async ()=>{
+      p.progress.oralAttempts = (p.progress.oralAttempts||0) + 1;
+      await saveProfile(p);
+      if(state.practice.recordingUrl) URL.revokeObjectURL(state.practice.recordingUrl);
+      state.practice.recordingUrl = null; state.practice.autoNote = ''; state.practice.feedback = null; state.practice.exact = null;
+      render();
+    }}, '🔁 Probar otra vez'),
+    el('button',{class:'pill-btn scan-item', 'data-scan-label':'Otra palabra', onclick:()=>startSayPractice()}, '⏭ Otra palabra (sin registrar)')
+  ]));
+  wrap.appendChild(evalBox);
 
-  wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Este modo trabaja la producción oral: imitar el modelo de voz es el paso previo al habla espontánea.'));
+  wrap.appendChild(el('div',{class:'helper-note'}, '🎓 Este modo es opcional y no es el único camino: una persona puede comunicarse muy bien con pictogramas o mensajes de voz sintetizada sin practicar pronunciación. Las grabaciones no se guardan; solo se registra el intento.'));
   return wrap;
 }
 
@@ -2542,7 +3032,8 @@ async function startSequencePractice(){
   const pools = categorizedPools(p);
   const hasCat = c => pools[c] && pools[c].length>0;
   const hasWord = w => !!findWordByLabel(p, w);
-  const pick = c => pools[c][Math.floor(Math.random()*pools[c].length)];
+  const AUX_VERBS = ['querer','necesito','tengo','estoy'];
+  const pick = c => { let arr = pools[c]; if(c==='acciones') arr = arr.filter(w=>!AUX_VERBS.includes(normalizeWord(w.label))); return arr[Math.floor(Math.random()*arr.length)]; };
   const fixed = w => findWordByLabel(p, w);
   // Plantillas armadas a mano para que las frases tengan sentido real (en vez de mezclar categorías al azar).
   // "cat" = una palabra cualquiera de esa categoría; "word" = una palabra fija (yo, querer, no, por favor).
@@ -2765,6 +3256,7 @@ async function resolveBalloon(p, target, isTarget){
   markInteraction();
   p.progress.practiceAttempts += 1;
   registerStreak(p, isTarget);
+  p.progress.compAttempts = (p.progress.compAttempts||0) + 1; if(isTarget) p.progress.compCorrect = (p.progress.compCorrect||0) + 1;
   hapticFeedback(p, isTarget?'good':'bad');
   if(isTarget){
     state.practice.feedback='good'; setMascotMood(p,'good',{speak:true, delayMs:1500}); p.progress.practiceCorrect += 1;
@@ -2938,6 +3430,53 @@ const STORIES = [
         options:[{label:'buenas noches', emoji:'🌙'},{label:'te quiero', emoji:'💜'}] },
     ],
     ending:'¡Qué lindo día! Descansá, mañana seguimos jugando. 🌙' },
+  { id:'colectivo', title:'Viajar en colectivo', emoji:'🚌',
+    desc:'Pedir el boleto, preguntar dónde bajar y pedir ayuda si hace falta.',
+    scenes:[
+      { prompt:'Subís al colectivo para ir al centro.', promptEmoji:'🚌',
+        options:[{label:'Buen día',emoji:'👋'},{label:'Voy al centro, por favor',emoji:'🚌'},{label:'¿Cuánto cuesta el boleto?',emoji:'🏷️'}] },
+      { prompt:'No sabés dónde bajar.', promptEmoji:'🤔',
+        options:[{label:'Avíseme en el hospital, por favor',emoji:'🏥'},{label:'No entiendo cuál es mi parada',emoji:'🤔'},{label:'Necesito ayuda',emoji:'🆘'}] },
+      { prompt:'Llegaste a tu parada.', promptEmoji:'🚏',
+        options:[{label:'Gracias',emoji:'💜'},{label:'Con permiso, voy a bajar',emoji:'🚪'}] },
+    ],
+    ending:'¡Llegaste a destino usando tus palabras! 🚌' },
+  { id:'consulta', title:'Consulta médica', emoji:'🩺',
+    desc:'Contar qué te pasa, entender las indicaciones y pedir que te expliquen mejor.',
+    scenes:[
+      { prompt:'Llegás al consultorio.', promptEmoji:'🏥',
+        options:[{label:'Tengo turno con el doctor',emoji:'📅'},{label:'Vengo a retirar una receta',emoji:'📄'},{label:'Necesito ayuda para completar la ficha',emoji:'🆘'}] },
+      { prompt:'El médico te pregunta qué te pasa.', promptEmoji:'🩺',
+        options:[{label:'Me duele',emoji:'🤕'},{label:'Tengo mareos',emoji:'😵'},{label:'Me siento muy cansado',emoji:'🥱'},{label:'No entiendo la pregunta',emoji:'🤔'}] },
+      { prompt:'No entendiste la indicación.', promptEmoji:'💊',
+        options:[{label:'Repita, por favor',emoji:'🔁'},{label:'Explíqueme más despacio',emoji:'🐢'},{label:'¿Puede escribirlo?',emoji:'✍️'}] },
+    ],
+    ending:'Pudiste contar lo que te pasa y entender la indicación. 🩺' },
+  { id:'compras_caja', title:'Compras y pago', emoji:'🛒',
+    desc:'Pagar, pedir que repitan un precio y revisar el vuelto.',
+    scenes:[
+      { prompt:'Estás en la fila de la caja.', promptEmoji:'🛒',
+        options:[{label:'Quiero pagar con tarjeta',emoji:'💳'},{label:'Voy a pagar en efectivo',emoji:'💵'},{label:'Necesito una bolsa',emoji:'🛍️'}] },
+      { prompt:'El cajero dice un precio y no lo entendiste.', promptEmoji:'🧾',
+        options:[{label:'Repita el precio, por favor',emoji:'🔁'},{label:'No entiendo',emoji:'🤔'},{label:'¿Me lo puede mostrar?',emoji:'👀'}] },
+      { prompt:'Revisás el vuelto.', promptEmoji:'💵',
+        options:[{label:'Gracias',emoji:'💜'},{label:'Me parece que falta vuelto',emoji:'🧐'}] },
+    ],
+    ending:'Compraste y pagaste con tus propias palabras. 🛒' },
+  { id:'conversacion', title:'Conversar con otra persona', emoji:'💬',
+    desc:'Saludar, dar tu opinión, aclarar un malentendido y despedirte.',
+    scenes:[
+      { prompt:'Un compañero te saluda.', promptEmoji:'👋',
+        options:[{label:'Hola, ¿cómo estás?',emoji:'👋'},{label:'Hola',emoji:'🙂'},{label:'Ahora no puedo hablar',emoji:'⏸️'}] },
+      { prompt:'Te propone un plan que no te convence.', promptEmoji:'📅',
+        options:[{label:'Me parece bien',emoji:'👍'},{label:'No estoy de acuerdo',emoji:'❌'},{label:'Prefiero otra cosa',emoji:'☝️'}] },
+      { prompt:'Hubo un malentendido.', promptEmoji:'😕',
+        options:[{label:'No quise decir eso',emoji:'🙅'},{label:'Te lo explico de nuevo',emoji:'💡'},{label:'Necesito un momento',emoji:'⏸️'}] },
+      { prompt:'Querés terminar la conversación.', promptEmoji:'🚪',
+        options:[{label:'Tengo que irme',emoji:'🚪'},{label:'Gracias por la charla',emoji:'💜'},{label:'Hablamos después',emoji:'👋'}] },
+    ],
+    ending:'Pudiste saludar, opinar, aclarar y despedirte. 💬' },
+
 ];
 function startStory(storyId){
   markInteraction();
